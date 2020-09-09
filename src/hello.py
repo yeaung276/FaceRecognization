@@ -23,7 +23,17 @@
 # import numpy as np
 # d = scipy.io.loadmat('data_base.mat')
 # print(np.linalg.norm(d['andrew']-d['arnaud']))
-import keras
-X = keras.Input((6,6,3))
-X = keras.layers.Conv2D(32,2)(X)
-print(X.shape.as_list()-X.shape.as_list())
+# import keras
+# X = keras.Input((6,6,3))
+# X = keras.layers.Conv2D(32,2)(X)
+# print(X.shape.as_list()-X.shape.as_list())
+# import numpy as np
+# from Utils import load_weights,LAYERS
+# mat = np.load('net_weights.npy', allow_pickle=True).item()
+# mat2 = load_weights()
+#
+# for layer in LAYERS:
+#     print(type(mat[layer]))
+#     print(type(mat2[layer]))
+#     assert (mat[layer].shape == mat2[layer].shape).all(), layer
+

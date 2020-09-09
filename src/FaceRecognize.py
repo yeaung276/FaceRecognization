@@ -8,7 +8,7 @@ from Utils import LAYERS, load_weights, img_to_encoding
 K.set_image_data_format('channels_last')
 
 print('loading weight matrix...', end='')
-weight_matrix = load_weights()
+weight_matrix = np.load('net_weights.npy', allow_pickle=True).item()
 print('ok')
 
 
@@ -17,7 +17,7 @@ class FaceRecognizer:
     def __init__(self, target_database_path='data_base.mat'):
         builder = InceptionModuleBuilder()
         self.database_path = target_database_path
-        self.model = InceptionModel((96,96,3))
+        self.model = builder.BuildInception()
         self._load_weights_to_model()
         self._load_database(target_database_path)
 
