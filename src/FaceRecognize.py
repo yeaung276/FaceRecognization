@@ -2,8 +2,8 @@ from os.path import isfile
 import scipy.io
 import numpy as np
 from keras import backend as K
-from InceptionV2 import InceptionModuleBuilder, InceptionModel
-from Utils import LAYERS, load_weights, img_to_encoding
+from Model.InceptionV2 import InceptionModuleBuilder
+from Utils.inception_utils import LAYERS, img_to_encoding
 
 K.set_image_data_format('channels_last')
 

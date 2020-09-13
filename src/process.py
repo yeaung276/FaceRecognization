@@ -1,29 +1,51 @@
-from contextlib import redirect_stdout
 import numpy as np
 import scipy.stats as ss
 import os
-
-from Utils import load_weights
-
-
-def log(function, file='log.txt'):
-    with open(file, 'w+') as f:
-        with redirect_stdout(f):
-            function()
+import cv2
+from Utils.Utils import show_random_sample
+from Model.SimeseNet import ModelBuilder
 
 
-def create_weight_mat():
-    mat = load_weights()
-    np.save('net_weights.npy', mat)
-
+#############################################################################################################
+# Preparing Data
 
 class _DATA_CONFIG:
-    anchor = 1000
+    anchor = 500
+    source = 'image'
     anchor_deviation = 10
-    additional_anchor = 500
-    additional_anchor_positive_chance = .8
-    random_seed = 0
-    training_data_ratio = 0.8
+    additional_anchor = 10000
+    additional_anchor_positive_chance = .4
+    random_seed = 2
+
+
+class Data:
+
+    def __init__(self, ndarray, label):
+        self.data = ndarray
+        self.label = label
+
+    def load(self):
+        source = _DATA_CONFIG.source
+        input1 = []
+        input2 = []
+        for pics in self.data:
+            pic1 = os.path.join(source, pics[0])
+            pic2 = os.path.join(source, pics[1])
+            if os.path.getsize(pic1) != 0:
+                img1 = self._read_image(pic1)
+                input1.append(img1)
+            if os.path.getsize(pic2) != 0:
+                img2 = self._read_image(pic2)
+                input2.append(img2)
+        return np.array(input1), np.array(input2), self.label
+
+    @staticmethod
+    def _read_image(path):
+        img1 = cv2.imread(path, 1)
+        img1 = cv2.resize(img1, (96, 96))
+        return img1
+
+###################################################################
 
 
 class GenerateDataset:
@@ -31,11 +53,15 @@ class GenerateDataset:
     def __init__(self, source='images'):
         np.random.seed(_DATA_CONFIG.random_seed)
         self.person_list = os.listdir(source)
+        _DATA_CONFIG.source = source
         self.face_dictionary = {}
         self.match_data = []
         self.unmatch_data = []
         self.anchors = {}
         self.add_anchors = {}
+        self.total_example = 0
+        self.dataset = []
+        self.labels = []
         for person in self.person_list:
             path = os.path.join(source, person)
             self.face_dictionary[person] = os.listdir(path)
@@ -71,16 +97,18 @@ class GenerateDataset:
         return  no_anchors
 
     def _find_match(self, name, size=1):
-        return np.random.choice(self.face_dictionary[name], size=size), name
+        choose = np.random.choice(self.face_dictionary[name], size=size)
+        return choose, name
 
     def _find_unmatch(self, name):
         while True:
             choose_name = np.random.choice(self.person_list)
-            if choose_name is not name:
+            if choose_name != name:
                 break
-        return np.random.choice(self.face_dictionary[name]), choose_name
+        choice =  np.random.choice(self.face_dictionary[choose_name])
+        return choice, choose_name
 
-    def create_unequal_pairs(self):
+    def _create_unequal_pairs(self):
         pos = 0
         neg = 0
         for name, anchor in self.add_anchors.items():
@@ -126,21 +154,59 @@ class GenerateDataset:
         no_match = self._match()
         no_unmatch = self._unmatch()
         no_add_anchor = self._choose_additional_anchor()
-        pos, neg = self.create_unequal_pairs()
+        pos, neg = self._create_unequal_pairs()
+        tot = len(self.match_data)+len(self.unmatch_data)
+        self.total_example = tot
+        self.dataset.extend(self.match_data)
+        self.labels.extend([1] * len(self.match_data))
+        self.dataset.extend(self.unmatch_data)
+        self.labels.extend([0] * len(self.unmatch_data))
+        assert len(self.dataset) == self.total_example
+        assert len(self.labels) == self.total_example
 
         print('Number of anchor created: {}\nNumber of positive examples: {}\nNumber of negative example: {}'
-              '\nUnbalance pos: {}\nUnbalance neg: {}'.format(
-                            no_anchor+no_add_anchor, no_match+pos, no_unmatch+neg, pos, neg
-                                    ))
+              '\nUnbalance pos: {}\nUnbalance neg: {},\nTotal: {}'.format(
+                                no_anchor+no_add_anchor, no_match+pos, no_unmatch+neg, pos, neg, tot
+                            ))
 
         return no_anchor, no_match, no_unmatch
 
-    def get_list(self):
-        return self.match_data, self.unmatch_data
+    def shuffle(self):
+        np.random.shuffle(self.match_data)
+        np.random.shuffle(self.unmatch_data)
 
+    def split(self, split_ratio=0.8):
+        no_of_train_example = int(self.total_example * split_ratio)
+        example_range = np.arange(0, self.total_example)
+
+        training_examples, test_examples = np.split(np.random.permutation(example_range), [no_of_train_example])
+        training_examples = training_examples.astype(int)
+        test_examples = test_examples.astype(int)
+
+        return Data(np.array(self.dataset)[training_examples], np.array(self.labels)[training_examples]), Data(
+                np.array(self.dataset)[test_examples], np.array(self.labels)[test_examples])
+
+    def get_list(self):
+        return self.dataset, self.labels
+
+###################################################################################################################
 
 
 tt = GenerateDataset(source='images')
 tt.generate_list()
+train, test = tt.split()
+i1, i2, y = train.load()
+print(i1.shape, i2.shape, y.shape)
+show_random_sample(i1, i2, y, pair=5)
+
+i1v, i2v, yv = test.load()
+print(i1v.shape, i2v.shape, yv.shape)
+show_random_sample(i1v, i2v, yv, pair=5)
+
+model = ModelBuilder.buildModel()
+model.fit([i1, i2], y, epochs=10, steps_per_epoch=100, validation_data=([i1v, i2v], yv))
+
+
+
 
 

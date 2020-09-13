@@ -197,7 +197,7 @@ class InceptionModuleBuilder:
         X = Lambda(lambda x: K.l2_normalize(x, axis=1))(X)
 
         # Create Model Instance
-        model = Model(inputs=X_input, outputs=X, name='FaceRecoModel')
+        model = Model(inputs=X_input, outputs=X, name='FaceNet')
 
         return model
 

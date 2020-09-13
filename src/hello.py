@@ -36,4 +36,8 @@
 #     print(type(mat[layer]))
 #     print(type(mat2[layer]))
 #     assert (mat[layer].shape == mat2[layer].shape).all(), layer
+import numpy as np
+# print(np.split(np.random.permutation(np.arange(10)), [5]))
+li = [1,2,3,4,5,6,7,8]
+print(li[[1,3,5,7]])
 
