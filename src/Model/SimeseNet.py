@@ -54,7 +54,7 @@ class ModelBuilder:
         average = Average()([out1, out2])
         conc = concatenate([subtract, average], axis=1, name='dense_layer_1')
 
-        X = Dense(128, activation='relu', kernel_regularizer=l2(0.02))(conc)
+        X = Dense(200, activation='relu', kernel_regularizer=l2(0.02))(conc)
         X = Dropout(0.2)(X)
         X = Dense(128, activation='relu', kernel_regularizer=l2(0.02))(X)
         X = Dropout(0.1)(X)
