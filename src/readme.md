@@ -1,5 +1,5 @@
-###Accurency: 0.8238, val_accuracy: 0.8381 
-
+### Accurency: 0.8238, val_accuracy: 0.8381 <br>
+#### process.py<br>
 loading weight matrix...ok<br>
 Number of anchor created: 10352<br>
 Number of positive examples: 4453<br>
