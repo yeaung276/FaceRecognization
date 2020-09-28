@@ -3,7 +3,7 @@ from keras import backend as K
 
 # from RemovedFiles.inception_blocks_v2 import InceptionModel
 from RemovedFiles.fr_utils import load_weights, img_to_encoding,load_weights_from_FaceNet
-from process import log
+from process_v1 import log
 from Model.InceptionV2 import InceptionModuleBuilder
 from FaceRecognize import FaceRecognizer
 

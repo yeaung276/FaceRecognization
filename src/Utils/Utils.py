@@ -1,6 +1,7 @@
 from contextlib import redirect_stdout
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 from Utils.inception_utils import load_weights
 
@@ -36,3 +37,38 @@ def show_random_sample(input1, input2, label, pair = 1):
         plt.axis('off')
     plt.tight_layout()
     plt.show(block=True)
+
+
+class Logger:
+    def __init__(self, filename):
+        self.terminal = sys.stdout
+        self.log = open(filename, 'a')
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        pass
+
+
+def plot_history(mat, start=0, end=-1):
+
+    fig, (loss, acc) = plt.subplots(2, 1)
+
+    loss.plot(mat['loss'].flatten()[start:end], label='training loss')
+    loss.plot(mat['val_loss'].flatten()[start:end], label='validation loss')
+    loss.set_title('loss')
+    loss.set_xlabel('epoch')
+    loss.set_ylabel('loss')
+    loss.legend()
+
+    acc.plot(mat['accuracy'].flatten()[start:end], label='training accuracy')
+    acc.plot(mat['val_accuracy'].flatten()[start:end], label='validation accuracy')
+    acc.set_title('accuracy')
+    acc.set_xlabel('epoch')
+    acc.set_ylabel('accuracy')
+    acc.legend()
+
+    plt.show()
+

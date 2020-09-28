@@ -32,3 +32,24 @@ Epoch 9/10<br>
 100/100 [==============================] - 134s 1s/step - loss: 0.4179 - accuracy: 0.8071 - val_loss: 0.3774 - val_accuracy: 0.8220<br>
 Epoch 10/10<br>
 100/100 [==============================] - 135s 1s/step - loss: 0.3863 - accuracy: 0.8238 - val_loss: 0.3517 - val_accuracy: 0.8381
+<br\>
+### with Model from Coursera Course
+100/100 [==============================] - 153s 2s/step - loss: 1.1301 - accuracy: 0.5484 - val_loss: 0.6432 - val_accuracy: 0.6167<br>
+Epoch 2/10<br>
+100/100 [==============================] - 139s 1s/step - loss: 0.6581 - accuracy: 0.6095 - val_loss: 0.6223 - val_accuracy: 0.6411<br>
+Epoch 3/10<br>
+100/100 [==============================] - 138s 1s/step - loss: 0.6118 - accuracy: 0.6571 - val_loss: 0.5850 - val_accuracy: 0.6882<br>
+Epoch 4/10<br>
+100/100 [==============================] - 141s 1s/step - loss: 0.5899 - accuracy: 0.6850 - val_loss: 0.5598 - val_accuracy: 0.7099<br>
+Epoch 5/10<br>
+100/100 [==============================] - 140s 1s/step - loss: 0.5530 - accuracy: 0.7113 - val_loss: 0.5222 - val_accuracy: 0.7380<br>
+Epoch 6/10<br>
+100/100 [==============================] - 144s 1s/step - loss: 0.5051 - accuracy: 0.7486 - val_loss: 0.4756 - val_accuracy: 0.7795<br>
+Epoch 7/10<br>
+100/100 [==============================] - 164s 2s/step - loss: 0.4689 - accuracy: 0.7721 - val_loss: 0.4555 - val_accuracy: 0.7874<br>
+Epoch 8/10<br>
+100/100 [==============================] - 143s 1s/step - loss: 0.4392 - accuracy: 0.7916 - val_loss: 0.4015 - val_accuracy: 0.8127<br>
+Epoch 9/10<br>
+100/100 [==============================] - 153s 2s/step - loss: 0.4036 - accuracy: 0.8131 - val_loss: 0.3664 - val_accuracy: 0.8367<br>
+Epoch 10/10<br>
+100/100 [==============================] - 144s 1s/step - loss: 0.3557 - accuracy: 0.8408 - val_loss: 0.3785 - val_accuracy: 0.8353<br>

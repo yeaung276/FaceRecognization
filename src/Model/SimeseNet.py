@@ -5,15 +5,16 @@ from keras.optimizers import Adam
 from keras import backend as K
 from keras.models import Model
 from keras.utils import plot_model
+from keras.regularizers import l2
 import numpy as np
 
-from Model.InceptionV2 import InceptionModuleBuilder
+from Model.InceptionV2 import InceptionModuleBuilder, InceptionModel
 from Utils.inception_utils import LAYERS
 
 K.set_image_data_format('channels_last')
 ##############################################################################################################
 
-trainable_layers = ['dense_layer']
+trainable_layers = []
 
 print('loading weight matrix...', end='')
 weight_matrix = np.load('net_weights.npy', allow_pickle=True).item()
@@ -24,7 +25,7 @@ class ModelBuilder:
     @classmethod
     def _create_base_model(cls, print=False):
         facenet_builder = InceptionModuleBuilder()
-        facenet = facenet_builder.BuildInception()
+        facenet = InceptionModel((96, 96, 3))  # facenet_builder.BuildInception()
         cls._load_weights(facenet)
         for layer in facenet.layers:
             if layer.name not in trainable_layers:
@@ -53,16 +54,16 @@ class ModelBuilder:
         average = Average()([out1, out2])
         conc = concatenate([subtract, average], axis=1, name='dense_layer_1')
 
-        X = Dropout(0.2)(conc)
-        X = Dense(256, activation='relu')(X)
-        X = Dense(256, activation='relu')(X)
+        X = Dense(128, activation='relu', kernel_regularizer=l2(0.02))(conc)
+        X = Dropout(0.2)(X)
+        X = Dense(128, activation='relu', kernel_regularizer=l2(0.02))(X)
+        X = Dropout(0.1)(X)
         X = Dense(1, activation='sigmoid')(X)
 
         model = Model(inputs=[X1, X2], outputs=X, name='SimeseFaceNet')
         if print:
             model.summary()
             plot_model(model)
-        model.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.001), metrics=['accuracy'])
 
         return model
 
