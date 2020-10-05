@@ -52,7 +52,7 @@ class Logger:
         pass
 
 
-def plot_history(mat, start=0, end=-1):
+def plot_history(mat, start=0, end=-1, save=None):
 
     fig, (loss, acc) = plt.subplots(2, 1)
 
@@ -70,5 +70,8 @@ def plot_history(mat, start=0, end=-1):
     acc.set_ylabel('accuracy')
     acc.legend()
 
+    if save is not None:
+        plt.savefig(save)
     plt.show()
+    return fig
 

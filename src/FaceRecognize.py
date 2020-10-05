@@ -2,23 +2,23 @@ from os.path import isfile
 import scipy.io
 import numpy as np
 from keras import backend as K
-from Model.InceptionV2 import InceptionModuleBuilder
+import cv2
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+from keras.models import Model
+from keras.layers import Input
+
+from Model.SimeseNet import ModelBuilder
 from Utils.inception_utils import LAYERS, img_to_encoding
 
 K.set_image_data_format('channels_last')
-
-print('loading weight matrix...', end='')
-weight_matrix = np.load('net_weights.npy', allow_pickle=True).item()
-print('ok')
 
 
 class FaceRecognizer:
 
     def __init__(self, target_database_path='data_base.mat'):
-        builder = InceptionModuleBuilder()
         self.database_path = target_database_path
-        self.model = builder.BuildInception()
-        self._load_weights_to_model()
+        self.model = self._get_models()
         self._load_database(target_database_path)
 
     def _load_database(self, path):
@@ -35,10 +35,6 @@ class FaceRecognizer:
         else:
             scipy.io.savemat('data_base.mat', self.target_database)
 
-    def _load_weights_to_model(self):
-        for name in LAYERS:
-            self.model.get_layer(name).set_weights(weight_matrix[name])
-
     def show_summary(self):
         self.model.summary()
 
@@ -52,4 +48,52 @@ class FaceRecognizer:
         enc2 = img_to_encoding(img2, self.model)
         return np.linalg.norm(enc1-enc2)
 
+    def predict(self, image_path1, image_path2):
+        img1 = cv2.imread(image_path1, 1)
+        img1 = cv2.resize(img1, (96, 96))
+        img1 = img1[..., ::-1]
+        img1 = np.around(img1 / 255.0, decimals=12)
+        x_1 = np.array([img1])
+
+        img2 = cv2.imread(image_path2, 1)
+        img2 = cv2.resize(img2, (96, 96))
+        img2 = img2[..., ::-1]
+        img2 = np.around(img2 / 255.0, decimals=12)
+        x_2 = np.array([img2])
+        embedding = self.model.predict_on_batch([x_1, x_2])
+        return embedding
+
+    @staticmethod
+    def _get_models():
+        model = ModelBuilder.buildModel()
+        model.load_weights('data/model/model.h5')
+
+        # base = Model(model.get_layer('model').input, model.get_layer('model').output)
+        # X1 = Input(shape=128)
+        # X2 = Input(shape=128)
+        #
+        # model.get_layer('average').input = [X1, X2]
+        # model.get_layer('subtract').input = [X1, X2]
+        # upper = Model(model.get_layer('dense').input, model.get_layer('dense_2').output)
+
+        return model
     # TODO: add calculate distance and find target method
+
+    def test(self):
+        emb = self.predict(image_path1='test_images/test(jnd).jpeg', image_path2='test_images/test(jsp).jpg')
+        img1 = mpimg.imread('test_images/test(jnd).jpeg')
+        img2 = mpimg.imread('test_images/test(jsp).jpg')
+        fig, (ax1, ax2) = plt.subplots(1,2)
+        ax1.imshow(img1)
+        ax1.axes.xaxis.set_visible(False)
+        ax1.axes.yaxis.set_visible(False)
+        ax2.imshow(img2)
+        ax2.axes.xaxis.set_visible(False)
+        ax2.axes.yaxis.set_visible(False)
+        plt.figtext(0.5, 0.15, 'similarity probability: {}'.format(round(np.asscalar(emb), 4)), ha='center', fontsize=13)
+        plt.savefig('jackCantEscape.jpg')
+        plt.show()
+
+
+# h = FaceRecognizer()
+# h.test()

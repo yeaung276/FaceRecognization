@@ -17,7 +17,7 @@ K.set_image_data_format('channels_last')
 trainable_layers = []
 
 print('loading weight matrix...', end='')
-weight_matrix = np.load('net_weights.npy', allow_pickle=True).item()
+weight_matrix = np.load('/home/yeaung/Documents/python/FaceRecognization/src/net_weights.npy', allow_pickle=True).item()
 print('ok')
 
 class ModelBuilder:
