@@ -18,7 +18,7 @@ class FaceRecognizer:
 
     def __init__(self, target_database_path='data_base.mat'):
         self.database_path = target_database_path
-        self.model = self._get_models()
+        self.model, self.base_model = self._get_models()
         self._load_database(target_database_path)
 
     def _load_database(self, path):
@@ -43,11 +43,6 @@ class FaceRecognizer:
         self.target_database.update({target_name: enc})
         self._save_database(self.database_path)
 
-    def calculate_distance(self, img1, img2):
-        enc1 = img_to_encoding(img1, self.model)
-        enc2 = img_to_encoding(img2, self.model)
-        return np.linalg.norm(enc1-enc2)
-
     def predict(self, image_path1, image_path2):
         img1 = cv2.imread(image_path1, 1)
         img1 = cv2.resize(img1, (96, 96))
@@ -68,7 +63,7 @@ class FaceRecognizer:
         model = ModelBuilder.buildModel()
         model.load_weights('data/model/model.h5')
 
-        # base = Model(model.get_layer('model').input, model.get_layer('model').output)
+        base = Model(model.get_layer('model').input, model.get_layer('model').output)
         # X1 = Input(shape=128)
         # X2 = Input(shape=128)
         #
@@ -76,14 +71,32 @@ class FaceRecognizer:
         # model.get_layer('subtract').input = [X1, X2]
         # upper = Model(model.get_layer('dense').input, model.get_layer('dense_2').output)
 
-        return model
-    # TODO: add calculate distance and find target method
+        return model, base
+
+    @staticmethod
+    def preprocess_images(faces):
+        def mapFunction(x):
+            assert x.shape == (96, 96, 3), 'dimension error: {}'.format(x.shape)
+            x = x[..., ::-1]
+            x = np.around(x / 255.0, decimals=12)
+            return x
+        return list(map(mapFunction, faces))
+
+    def get_encodings(self, faces):
+        processed_images = self.preprocess_images(faces)
+        return self.base_model.predict_on_batch(np.array(processed_images))
+
+    def process_encoding(self, encodings):
+        processed_encoding = []
+        for enc in encodings:
+            processed_encoding.append(np.vstack([enc]*3))
+        return processed_encoding
 
     def test(self):
         emb = self.predict(image_path1='test_images/test(jnd).jpeg', image_path2='test_images/test(jsp).jpg')
         img1 = mpimg.imread('test_images/test(jnd).jpeg')
         img2 = mpimg.imread('test_images/test(jsp).jpg')
-        fig, (ax1, ax2) = plt.subplots(1,2)
+        fig, (ax1, ax2) = plt.subplots(1, 2)
         ax1.imshow(img1)
         ax1.axes.xaxis.set_visible(False)
         ax1.axes.yaxis.set_visible(False)

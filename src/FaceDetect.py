@@ -40,14 +40,15 @@ class FaceDetector:
     def detectFaces(self, image_path, draw=False):
 
         faces, image = self.getFacesCoordinates(image_path)
+        img_copy = image.copy()
         face_slices = []
         for x, y, w, h in faces:
             x, y, w, h = self.deShrink(x, y, w, h)
             face_slices.append(cv2.resize(image[y:y+w, x:x+h, :], (96, 96)))
             if draw:
-                self.draw_rectangle([(x, y, w, h)], image)
+                self.draw_rectangle([(x, y, w, h)], img_copy)
 
-        return image, face_slices, faces
+        return img_copy, face_slices, faces
 
     def deShrink(self, x, y, w, h):
         x = int(self.shrink_parameter * x)
