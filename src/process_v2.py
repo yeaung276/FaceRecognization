@@ -158,11 +158,10 @@ def Train_Model():
     learning_rate = 0.00005
     steps_per_epochs = 200
     epochs = 500
-    note =  'increase Dense layer 1 from 126 to 200 complexity of the model' 
+    note = 'increase the node to 256'
 
-
-    Train = GenerateDataset(5000, source='images/Training')
-    Test = GenerateDataset(500, source='images/Testing')
+    Train = GenerateDataset(10000, source='images/Training')
+    Test = GenerateDataset(1000, source='images/Testing')
 
     print('Training Data...')
     Train.generate_list()
@@ -189,11 +188,11 @@ def Train_Model():
     model.compile(loss='binary_crossentropy', optimizer=Adam(lr=learning_rate), metrics=['accuracy'])
     print('Training Progress')
     history = model.fit([i1, i2], y, epochs=epochs, steps_per_epoch=steps_per_epochs, validation_data=([i1v, i2v], yv))
-    model.save('modelHistory/28sept/model.h5')
-    scipy.io.savemat('modelHistory/28sept/0.0.1_hist.mat', history.history)
+    model.save('modelHistory/29sept/model.h5')
+    scipy.io.savemat('modelHistory/29sept/0.0.1_hist.mat', history.history)
 
 
-sys.stdout = Logger('modelHistory/28sept/log.txt')
+sys.stdout = Logger('modelHistory/29sept/log.txt')
 Train_Model()
 
 
