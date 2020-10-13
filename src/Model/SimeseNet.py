@@ -20,6 +20,7 @@ print('loading weight matrix...', end='')
 weight_matrix = np.load('net_weights.npy', allow_pickle=True).item()
 print('ok')
 
+
 class ModelBuilder:
 
     @classmethod
@@ -35,6 +36,24 @@ class ModelBuilder:
             base_model.summary()
         return base_model
 
+    @classmethod
+    def _create_upper_model(cls, print=False):
+        X1 = Input(shape=128)
+        X2 = Input(shape=128)
+        subtract = Subtract()([X1, X2])
+        average = Average()([X1, X2])
+        conc = concatenate([subtract, average], axis=1, name='dense_layer_1')
+
+        X = Dense(256, activation='relu', kernel_regularizer=l2(0.02))(conc)
+        X = Dropout(0.2)(X)
+        X = Dense(256, activation='relu', kernel_regularizer=l2(0.02))(X)
+        X = Dropout(0.1)(X)
+        X = Dense(1, activation='sigmoid')(X)
+        model = Model(inputs=[X1, X2], outputs=X, name='upper_model')
+        if print:
+            model.summary()
+        return model
+
     @staticmethod
     def _load_weights(model):
         for name in LAYERS:
@@ -43,6 +62,7 @@ class ModelBuilder:
     @classmethod
     def buildModel(cls, print=False):
         base = cls._create_base_model()
+        upper = cls._create_upper_model()
 
         X1 = Input(shape=(96, 96, 3))
         X2 = Input(shape=(96, 96, 3))
@@ -50,15 +70,7 @@ class ModelBuilder:
         out1 = base(X1)
         out2 = base(X2)
 
-        subtract = Subtract()([out1, out2])
-        average = Average()([out1, out2])
-        conc = concatenate([subtract, average], axis=1, name='dense_layer_1')
-
-        X = Dense(200, activation='relu', kernel_regularizer=l2(0.02))(conc)
-        X = Dropout(0.2)(X)
-        X = Dense(128, activation='relu', kernel_regularizer=l2(0.02))(X)
-        X = Dropout(0.1)(X)
-        X = Dense(1, activation='sigmoid')(X)
+        X = upper([out1, out2])
 
         model = Model(inputs=[X1, X2], outputs=X, name='SimeseFaceNet')
         if print:
@@ -69,4 +81,5 @@ class ModelBuilder:
 
     def test(self):
         self._create_base_model(print=True)
+
 
