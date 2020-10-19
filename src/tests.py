@@ -2,8 +2,7 @@ import scipy.io
 from keras import backend as K
 
 # from RemovedFiles.inception_blocks_v2 import InceptionModel
-from RemovedFiles.fr_utils import load_weights, img_to_encoding,load_weights_from_FaceNet
-from process_v1 import log
+from RemovedFiles.fr_utils import load_weights_from_FaceNet
 from Model.InceptionV2 import InceptionModuleBuilder
 from FaceRecognize import FaceRecognizer
 
@@ -79,7 +78,7 @@ def Encoding_test():
 def add_target_test():
     rec = FaceRecognizer()
     rec.add_target('faces/arnaud.jpg', 'arnaud')
-    mat = scipy.io.loadmat('data_base.mat')
+    mat = scipy.io.loadmat('../RemovedFiles/data_base.mat')
     assert 'arnaud' in mat.keys()
 
 

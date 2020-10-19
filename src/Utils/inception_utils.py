@@ -109,7 +109,10 @@ def load_weights():
 
 
 def img_to_encoding(image_path, model):
-    img1 = cv2.imread(image_path, 1)
+    if type(image_path) is str:
+        img1 = cv2.imread(image_path, 1)
+    else:
+        img1 = image_path
     img1 = cv2.resize(img1, (96, 96))
     img = img1[..., ::-1]
     img = np.around(img / 255.0, decimals=12)
