@@ -23,5 +23,5 @@ http://www.cfpw.io/
 
 ### Recognized Video
 ![output_optimized](https://user-images.githubusercontent.com/58524393/97069994-65de3200-15fa-11eb-9aa4-50bd0823228b.gif)<br>
-Not good but ok XD
+Not good but ok XD [click here to download full video](https://github.com/yeaung276/FaceRecognization/blob/master/src/output_with_audio.mp4)
 
