@@ -22,6 +22,6 @@ http://www.cfpw.io/
 ![mr gibbs](https://github.com/yeaung276/FaceRecognization/blob/master/src/test_images/GibbsAWE.png)<br>
 
 ### Recognized Video
-<br>
+![output_optimized](https://user-images.githubusercontent.com/58524393/97069226-cff3d880-15f4-11eb-91ea-544b8c090047.gif)<br>
 Not good but ok XD
 
