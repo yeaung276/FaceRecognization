@@ -1,5 +1,5 @@
 ### Note
-I used Siamese net idea and trained with binary cross entrypy loss. You should try train using tripplet loss. The Shared Base Model is Face net from [this link](https://github.com/iwantooxxoox/Keras-OpenFace). The dataset is [here](http://www.cfpw.io/). The model not impressive but not bad and have a lot of room to improve.
+I used Siamese net idea and trained with binary cross entrypy loss. You should try train using tripplet loss. The Shared Base Model is Face net from [this link](https://github.com/iwantooxxoox/Keras-OpenFace). The dataset is [here](http://www.cfpw.io/). The model is not impressive but not bad and have a lot of rooms to improve.
 
 ### Net Model
 
