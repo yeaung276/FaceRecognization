@@ -1,7 +1,7 @@
 import scipy.io
 from Utils.Utils import plot_history
 from keras.utils import plot_model
-from Model.SimeseNet import ModelBuilder
+from Model.similarity import ModelBuilder
 
 
 mat = scipy.io.loadmat('0.0.1_hist.mat')

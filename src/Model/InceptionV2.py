@@ -5,7 +5,7 @@
 import keras
 from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D
 from keras.layers import Dense, Activation, BatchNormalization
-from keras.layers import Flatten, Input, concatenate
+from keras.layers import Flatten, Input, concatenate, Layer
 from keras.layers.core import Lambda
 from keras.regularizers import l2
 from keras import backend as K
@@ -13,6 +13,7 @@ from keras.models import Model
 import numpy as np
 
 K.set_image_data_format('channels_last')
+        
 
 
 class CONFIG:
@@ -503,7 +504,7 @@ def InceptionModel(input_shape):
     X = Lambda(lambda x: K.l2_normalize(x, axis=1))(X)
 
     # Create model instance
-    model = Model(inputs=X_input, outputs=X, name='FaceRecoModel')
+    model = Model(inputs=X_input, outputs=X, name='InceptionModel')
 
     return model
 

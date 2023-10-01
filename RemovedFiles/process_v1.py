@@ -3,7 +3,7 @@ import scipy.stats as ss
 import os
 import cv2
 from Utils.Utils import show_random_sample
-from Model.SimeseNet import ModelBuilder
+from Model.similarity import ModelBuilder
 
 
 #############################################################################################################
