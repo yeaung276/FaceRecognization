@@ -25,3 +25,10 @@ http://www.cfpw.io/
 ![output_optimized](https://user-images.githubusercontent.com/58524393/97069994-65de3200-15fa-11eb-9aa4-50bd0823228b.gif)<br>
 Not good but ok XD [click here to download full video](https://github.com/yeaung276/FaceRecognization/blob/master/src/output_with_audio.mp4)
 
+
+TODO: figure out how train/test spliting is happening in the triplet gen component
+--- It split after all data is being readed and loaded
+--- https://www.tensorflow.org/tfx/guide/examplegen#custom_inputoutput_split
+This will help me to configure the split by adding a feature of train or test and splitting based on that feature.
+pass the directory path to the example when converting
+create a function that will read tfx records, decode and display in the colab

@@ -12,7 +12,7 @@ random.seed(0)
 
 class TestExampleGen:
     def setup(self):
-        self.base_dir = 'mocks'
+        self.base_dir = 'mocks/example_gen'
 
     def test_triplet_gen(self):
         with TestPipeline() as p:
@@ -20,15 +20,15 @@ class TestExampleGen:
             p | 'ToTFExample' >> _ImagesToTriplets(self.base_dir,sample_per_class=1)
             )
             assert_that(examples, equal_to([
-                ("mocks/1/1.png", "mocks/1/2.png", "mocks/2/2.png"),
-                ("mocks/2/2.png", "mocks/2/1.png", "mocks/1/1.png")
+                ("mocks/example_gen/1/1.png", "mocks/example_gen/1/2.png", "mocks/example_gen/2/2.png"),
+                ("mocks/example_gen/2/2.png", "mocks/example_gen/2/1.png", "mocks/example_gen/1/1.png")
             ]))
             
     def test_tfrecord_gen(self):
         with TestPipeline() as p:
             examples = (
                 p
-                | 'Triplets' >> beam.Create([("mocks/1/1.png", "mocks/1/2.png", "mocks/2/2.png")])
+                | 'Triplets' >> beam.Create([("mocks/example_gen/1/1.png", "mocks/example_gen/1/2.png", "mocks/example_gen/2/2.png")])
                 | 'TFRec transofrm' >> _TripletToExample()
             )
 

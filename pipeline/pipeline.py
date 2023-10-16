@@ -1,37 +1,21 @@
-
-import random
-import logging
-
-from typing import Dict, Any
-
-from tfx.types import standard_component_specs
-from tfx.dsl.io import fileio
-import apache_beam as beam
-import tensorflow as tf 
+from tfx import v1 as tfx
+import tfx.orchestration.metadata
+from pipeline.example_gen.component import TripletExampleGen
 
 
-#     # Read each CSV file while maintaining order. This is done in order to group
-#     # together multi-line string fields.
-#     parsed_csv_lines = (
-#         pipeline
-#         | 'CreateFilenames' >> beam.Create(csv_files)
-#         | 'ReadFromText' >> beam.ParDo(_ReadCsvRecordsFromTextFile())
-#         | 'ParseCSVLine' >> beam.ParDo(csv_decoder.ParseCSVLine(delimiter=','))
-#         | 'ExtractParsedCSVLines' >> beam.Keys())
-#     column_infos = beam.pvalue.AsSingleton(
-#         parsed_csv_lines
-#         | 'InferColumnTypes' >> beam.CombineGlobally(
-#             csv_decoder.ColumnTypeInferrer(column_names, skip_blank_lines=True))
-#     )
 
-#     return (parsed_csv_lines
-#             |
-#             'ToTFExample' >> beam.ParDo(_ParsedCsvToTfExample(), column_infos))
+def _create_pipeline(pipeline_name: str, pipeline_root: str, data_root: str,
+                     metadata_path: str) -> tfx.dsl.Pipeline:
+  """Creates a three component penguin pipeline with TFX."""
+  # Brings data into the pipeline.
+  example_gen = TripletExampleGen(input_base=data_root)
 
+  # Following three components will be included in the pipeline.
+  components = [example_gen]
 
-# class Executor(BaseExampleGenExecutor):
-#   """Generic TFX CSV example gen executor."""
-
-#   def GetInputSourceToExamplePTransform(self) -> beam.PTransform:
-#     """Returns PTransform for CSV to TF examples."""
-#     return _CsvToExample
+  return tfx.dsl.Pipeline(
+      pipeline_name=pipeline_name,
+      pipeline_root=pipeline_root,
+      metadata_connection_config=tfx.orchestration.metadata
+      .sqlite_metadata_connection_config(metadata_path),
+      components=components)
