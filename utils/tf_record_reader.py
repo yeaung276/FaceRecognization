@@ -1,6 +1,4 @@
-import os
 import tensorflow as tf
-import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -21,5 +19,20 @@ def read_examplegen_output(path: str, compression_type = 'GZIP', sample=10):
         yield result
         
 def inspect_triplets(root: str):
-    train_examples = list(read_examplegen_output(os.path.join(root, 'Split-train')))
+    train_examples = list(read_examplegen_output(root))
+    fig, axs = plt.subplots(len(train_examples), 3)
+    for idx, example in enumerate(train_examples):
+        axs[idx, 0].imshow(example['positive'].numpy())
+        axs[idx, 0].set_xticks([])
+        axs[idx, 0].set_yticks([])
+
+        axs[idx, 1].imshow(example['anchor'].numpy())
+        axs[idx, 1].set_xticks([])
+        axs[idx, 1].set_yticks([])
+
+        axs[idx, 2].imshow(example['negative'].numpy())
+        axs[idx, 2].set_xticks([])
+        axs[idx, 2].set_yticks([])
+    plt.show()
+    
     
