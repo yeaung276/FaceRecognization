@@ -6,7 +6,7 @@ from pipeline.example_gen.component import TripletExampleGen
 
 def create_pipeline(pipeline_name: str, pipeline_root: str, data_root: str,
                      metadata_path: str) -> Pipeline:
-  """Creates a three component penguin pipeline with TFX."""
+  """Creates a triplet pipeline with TFX."""
   # Brings data into the pipeline.
   example_gen = TripletExampleGen(
       input_base=data_root, 
