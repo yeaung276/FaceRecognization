@@ -17,15 +17,17 @@ class triplet_component_spec:
 class _ImagesToTriplets(beam.PTransform):
   """Read Images and transform to Triplets."""
 
-  def __init__(self, base_uri: str, sample_per_class = 5):
+  def __init__(self, base_uri: str, split_pattern: str, sample_per_class = 5):
     """Init method for _ImagesToTriplet."""
     self.input_base_uri = base_uri
+    self.split_pattern = split_pattern
     self.sample_per_class = sample_per_class
     
   def _get_triplets(self):
-      image_folders = fileio.listdir(self.input_base_uri)
+      image_folders = fileio.glob(f'{self.input_base_uri}/{self.split_pattern}')
+      assert len(image_folders) > 1, f"excepted to have minimum folder of 2 to generate triplet instead get {len(image_folders)} folders."
       for folder in image_folders:
-          images = fileio.glob(f'{self.input_base_uri}/{folder}/*')
+          images = fileio.glob(f'{folder}/*')
           if len(images) < self.sample_per_class:
               logging.warning(f'folder {folder} only has {len(images)} images.')
           # select anchor images
@@ -39,7 +41,7 @@ class _ImagesToTriplets(beam.PTransform):
               negative_folder = random.choice(image_folders)
               while negative_folder == folder:
                   negative_folder = random.choice(image_folders)
-              negative = random.choice(fileio.glob(f'{self.input_base_uri}/{negative_folder}/*'))
+              negative = random.choice(fileio.glob(f'{negative_folder}/*'))
               # appand triplet to the list of triplet
               yield (positive, anchor, negative)
       
@@ -94,7 +96,9 @@ class _TripletToExample(beam.PTransform):
         )
         return examples
       
-class _TripletTransform(beam.PTransform):
+@beam.typehints.with_input_types(beam.Pipeline)
+@beam.typehints.with_output_types(tf.train.Example)
+class TripletTransform(beam.PTransform):
     """Combine ImageToTriplet and TripletToExample"""
    
     def __init__(self, exec_properties: Dict[str, Any], split_pattern: str):
@@ -106,10 +110,9 @@ class _TripletTransform(beam.PTransform):
           sample_per_class: number of sample from one folder. If number of images
             in the folder is not enought, only half of the files will be selected
         """
-        if split_pattern != '*':
-            logging.warn(f'split_pattern provided but it will not have any affect on splitting the data')
         self.input_base_uri = exec_properties[standard_component_specs.INPUT_BASE_KEY]
-        if exec_properties[standard_component_specs.CUSTOM_CONFIG_KEY] is None:
+        self.split_pattern = split_pattern or '*'
+        if exec_properties.get(standard_component_specs.CUSTOM_CONFIG_KEY) is None:
             logging.info(f'sample_per_class is not specified. Default to 5 sample_per_class.')
             self.sample_per_class = 5
         else:
@@ -119,6 +122,6 @@ class _TripletTransform(beam.PTransform):
     def expand(self, pipeline: beam.Pipeline):
       return (
         pipeline 
-        | "ImagesToTriplet" >> _ImagesToTriplets(self.input_base_uri, self.sample_per_class) 
+        | "ImagesToTriplet" >> _ImagesToTriplets(self.input_base_uri, self.split_pattern, self.sample_per_class) 
         | "TripletToTFExample" >> _TripletToExample()
       )

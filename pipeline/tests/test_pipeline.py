@@ -1,2 +1,0 @@
-class TestPipeline:
-    pass

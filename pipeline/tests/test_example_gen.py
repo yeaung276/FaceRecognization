@@ -17,7 +17,7 @@ class TestExampleGen:
     def test_triplet_gen(self):
         with TestPipeline() as p:
             examples = (
-            p | 'ToTFExample' >> _ImagesToTriplets(self.base_dir,sample_per_class=1)
+            p | 'ToTFExample' >> _ImagesToTriplets(self.base_dir,split_pattern='[0-3]',sample_per_class=1)
             )
             assert_that(examples, equal_to([
                 ("mocks/example_gen/1/1.png", "mocks/example_gen/1/2.png", "mocks/example_gen/2/2.png"),

@@ -8,14 +8,15 @@ from tfx.orchestration import data_types
 from tfx.proto import example_gen_pb2
 from tfx.proto import range_config_pb2
 
-from pipeline.example_gen.transforms import _TripletTransform
+from pipeline.example_gen.transforms import TripletTransform
+import apache_beam as beam
 
 class Executor(BaseExampleGenExecutor):
   """TFX triplet example gen executor."""
 
-  def GetInputSourceToExamplePTransform(self):
+  def GetInputSourceToExamplePTransform(self) -> beam.PTransform:
     """Returns PTransform for Triplet TF examples."""
-    return _TripletTransform
+    return TripletTransform # type: ignore
   
   
 class TripletExampleGen(component.FileBasedExampleGen):
@@ -41,7 +42,7 @@ class TripletExampleGen(component.FileBasedExampleGen):
                                     data_types.RuntimeParameter]] = None,
       range_config: Optional[Union[placeholder.Placeholder,
                                    range_config_pb2.RangeConfig, # type: ignore
-                                   data_types.RuntimeParameter]] = None, 
+                                   data_types.RuntimeParameter]] = None,
       triplet_config: Optional[dict] = None,
       ):
       """Construct a TripletExampleGen component.
@@ -57,6 +58,7 @@ class TripletExampleGen(component.FileBasedExampleGen):
         range_config: An optional range_config_pb2.RangeConfig instance,
           specifying the range of span values to consider. If unset, driver will
           default to searching for latest span with no restrictions.
+        triplet_config: dict containing sample_per_class
       """
       super().__init__(
           input_base=input_base,
