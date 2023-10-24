@@ -3,9 +3,8 @@ import tensorflow as tf
 import apache_beam as beam
 from apache_beam.testing.test_pipeline import TestPipeline
 from apache_beam.testing.util import assert_that, equal_to
-from tfx.types import standard_component_specs
 
-from pipeline.example_gen.transforms import _ImagesToTriplets, _TripletToExample
+from pipeline.example_gen.executor import _ImagesToTriplets, _TripletToExample
 
 random.seed(0)
 

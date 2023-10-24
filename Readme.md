@@ -26,9 +26,5 @@ http://www.cfpw.io/
 Not good but ok XD [click here to download full video](https://github.com/yeaung276/FaceRecognization/blob/master/src/output_with_audio.mp4)
 
 
-TODO: figure out how train/test spliting is happening in the triplet gen component
---- It split after all data is being readed and loaded
---- https://www.tensorflow.org/tfx/guide/examplegen#custom_inputoutput_split
-This will help me to configure the split by adding a feature of train or test and splitting based on that feature.
-pass the directory path to the example when converting
-create a function that will read tfx records, decode and display in the colab
+TODO:
+find out how can I view pipeline run matadata for the cofiguration used for each component like split ratio, split path, validation results, etcs
