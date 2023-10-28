@@ -10,7 +10,7 @@ class EmbeddingGen(base_beam_component.BaseBeamComponent):
     """Custom TFX EmbeddingGen Component."""
 
     SPEC_CLASS = embedding_gen_spec.EmbeddingGenSpec
-    EXECUTOR_SPEC = executor_spec.ExecutorClassSpec(executor.Executor)
+    EXECUTOR_SPEC = executor_spec.BeamExecutorSpec(executor.Executor)
 
     def __init__(self, examples: channel.BaseChannel, model: channel.BaseChannel):
         """Construct an EmbeddingGen component.

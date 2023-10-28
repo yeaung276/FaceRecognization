@@ -1,7 +1,20 @@
 from typing import Dict, List, Any
+import os
 
 from tfx.dsl.components.base import base_beam_executor
-from tfx.types import artifact
+from tfx.types import artifact, artifact_utils
+from tfx.components.util import tfxio_utils
+from tfx.utils import io_utils
+from tfx_bsl.tfxio import record_based_tfxio
+from tfx_bsl.public.beam import run_inference
+from tfx_bsl.public.proto import model_spec_pb2
+import apache_beam as beam
+import tensorflow as tf
+
+from pipeline.embedding_gen.do_fns import FlatTriplets, ToTriplets
+import pipeline.embedding_gen.embedding_gen_spec as embedding_specs
+
+_TELEMETRY_DESCRIPTORS = ['EmbeddingGen']
 
 
 class Executor(base_beam_executor.BaseBeamExecutor):
@@ -18,6 +31,7 @@ class Executor(base_beam_executor.BaseBeamExecutor):
         Args:
           input_dict: Input dict from input key to a list of Artifacts.
             - examples: examples for inference.
+            - model: tensorflow model for inference
           output_dict: Output dict from output key to a list of Artifacts.
             - output: bulk inference results.
           exec_properties: A dict of execution properties.
@@ -27,3 +41,70 @@ class Executor(base_beam_executor.BaseBeamExecutor):
           None
         """
         self._log_startup(input_dict, output_dict, exec_properties)
+    
+        if  embedding_specs.EMBEDDING_GEN_EXAMPLE_KEY not in input_dict:
+            raise ValueError('\'examples\' is missing in input dict.')
+    
+        if embedding_specs.EMBEDDING_GEN_MODEL_KEY not in input_dict:
+            raise ValueError('\'model\' is missing in input dict.')
+        model = artifact_utils.get_single_instance(input_dict[embedding_specs.EMBEDDING_GEN_MODEL_KEY])
+        
+        self._run_model_inferance(input_dict['examples'], model)
+        
+    def _parse_example(self, raw_example):
+        example = tf.train.Example.FromString(raw_example)
+        triplet = {}
+        for key, value in example.features.feature.items():
+            triplet[key] = tf.io.parse_tensor(value.bytes_list.value[0], out_type=tf.uint8)
+        return triplet
+        
+    def _run_model_inferance(self, 
+                             examples: List[artifact.Artifact], 
+                             inference_endpoint: model_spec_pb2.InferenceSpecType) -> None: # type: ignore
+        example_uris = {
+            'train': os.path.join(examples[0].uri, 'Split-train')
+        }
+        # for example_artifact in examples:
+        #     for split in artifact_utils.decode_split_names(example_artifact.split_names):
+        #         example_uris[split] = artifact_utils.get_split_uri([example_artifact],split)
+
+        tfxio_factory = tfxio_utils.get_tfxio_factory_from_artifact(
+            examples,
+            _TELEMETRY_DESCRIPTORS,
+            schema=None,
+            read_as_raw_records=True,
+            # We have to specify this parameter in order to create a RawRecord TFXIO
+            # but we won't use the RecordBatches so the column name of the raw
+            # records does not matter.
+            raw_record_column_name='unused')
+
+        with self._make_beam_pipeline() as pipeline:
+            data_list = []
+            for split, example_uri in example_uris.items():
+                tfxio = tfxio_factory([io_utils.all_files_pattern(example_uri)])
+                assert isinstance(tfxio, record_based_tfxio.RecordBasedTFXIO), (
+                    'Unable to use TFXIO {} as it does not support reading raw records.'
+                    .format(type(tfxio)))
+                data = (pipeline
+                        | f'ReadData[{split}]' >> tfxio.RawRecordBeamSource()
+                        | f'ParseExample[{split}]' >> beam.Map(self._parse_example)
+                        | f'Flatten[{split}]' >> beam.ParDo(FlatTriplets())
+                        | f'Inference[{split}]' >> run_inference.RunInference(inference_endpoint)
+                        | f'GroupBy[{split}]' >> beam.GroupByKey()
+                        | f'ToTriplets[{split}]' >> beam.ParDo(ToTriplets())
+                        )
+                print(data)
+                
+    def _get_inference_spec(
+      self, model_path: str,
+      exec_properties: Dict[str, Any]) -> model_spec_pb2.InferenceSpecType: # type: ignore
+        model_spec = bulk_inferrer_pb2.ModelSpec()
+        proto_utils.json_to_proto(
+            exec_properties[standard_component_specs.MODEL_SPEC_KEY], model_spec)
+        saved_model_spec = model_spec_pb2.SavedModelSpec(
+            model_path=model_path,
+            tag=model_spec.tag,
+            signature_name=model_spec.model_signature_name)
+        result = model_spec_pb2.InferenceSpecType() # type: ignore
+        result.saved_model_spec.CopyFrom(saved_model_spec)
+        return result

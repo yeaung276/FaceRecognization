@@ -1,5 +1,8 @@
 from tfx.types import component_spec, standard_artifacts
 
+EMBEDDING_GEN_EXAMPLE_KEY = 'examples'
+EMBEDDING_GEN_MODEL_KEY = 'model'
+
 
 class EmbeddingGenSpec(component_spec.ComponentSpec):
     """ComponentSpec for Custom TFX Hello World Component."""
@@ -15,5 +18,5 @@ class EmbeddingGenSpec(component_spec.ComponentSpec):
     }
     OUTPUTS = {
         # This will be a dictionary which this component will populate
-        #   'output_data': component_spec.ChannelParameter(type=standard_artifacts.Examples),
+        #   'output_examples': component_spec.ChannelParameter(type=standard_artifacts.Examples),
     }
