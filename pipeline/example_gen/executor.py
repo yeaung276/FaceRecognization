@@ -11,9 +11,7 @@ from tfx.components.example_gen.base_example_gen_executor import BaseExampleGenE
 import apache_beam as beam
 from apache_beam.io.filesystems import FileSystems
 
-
-class triplet_component_spec:
-    SAMPLE_PER_CLASS = "sample_per_class"
+from pipeline.example_gen.data_specs import triplet_component_config
 
 
 class _ImagesToTriplets(beam.PTransform):
@@ -122,7 +120,7 @@ class TripletTransform(beam.PTransform):
             config = json.loads(
                 exec_properties[standard_component_specs.CUSTOM_CONFIG_KEY]
             )
-            self.sample_per_class = config[triplet_component_spec.SAMPLE_PER_CLASS]
+            self.sample_per_class = config[triplet_component_config.SAMPLE_PER_CLASS]
 
     def expand(self, pipeline: beam.Pipeline):
         return (

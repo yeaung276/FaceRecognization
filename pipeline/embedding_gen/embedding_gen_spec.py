@@ -1,7 +1,7 @@
 from tfx.types import component_spec, standard_artifacts
 
-EMBEDDING_GEN_EXAMPLE_KEY = 'examples'
-EMBEDDING_GEN_MODEL_KEY = 'model'
+EMBEDDING_GEN_EXAMPLE_KEY = "examples"
+EMBEDDING_GEN_MODEL_KEY = "model"
 
 
 class EmbeddingGenSpec(component_spec.ComponentSpec):
