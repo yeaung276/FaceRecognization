@@ -24,7 +24,7 @@ def create_pipeline(pipeline_name: str, pipeline_root: str, data_root: str,
   
   # Convert it into encodings
   examples = Importer(
-      source_uri='mocks/pipeline_root/TripletExampleGen/examples/2', 
+      source_uri='mocks/pipeline_root/TripletExampleGen/examples/127', 
       artifact_type=standard_artifacts.Examples
     ).with_id('example_importer')
   model = Importer(

@@ -2,6 +2,7 @@ from tfx.types import component_spec, standard_artifacts
 
 EMBEDDING_GEN_EXAMPLE_KEY = "examples"
 EMBEDDING_GEN_MODEL_KEY = "model"
+EMBEDDING_GEN_OUTPUT_KEY = "output"
 
 
 class EmbeddingGenSpec(component_spec.ComponentSpec):
@@ -18,5 +19,5 @@ class EmbeddingGenSpec(component_spec.ComponentSpec):
     }
     OUTPUTS = {
         # This will be a dictionary which this component will populate
-        #   'output_examples': component_spec.ChannelParameter(type=standard_artifacts.Examples),
+        'output': component_spec.ChannelParameter(type=standard_artifacts.Examples),
     }

@@ -9,15 +9,17 @@ from tfx_bsl.tfxio import record_based_tfxio
 from tfx_bsl.public.beam import run_inference
 from tfx_bsl.public.proto import model_spec_pb2
 import apache_beam as beam
-from apache_beam.ml.inference.base import RunInference
+from apache_beam.ml.inference.base import RunInference, PredictionResult
 from apache_beam.ml.inference.base import KeyedModelHandler
 from apache_beam.ml.inference.tensorflow_inference import TFModelHandlerTensor
+
 import tensorflow as tf
 
 from pipeline.embedding_gen.do_fns import FlatTriplets, ToTriplets
 import pipeline.embedding_gen.embedding_gen_spec as embedding_specs
 
 _TELEMETRY_DESCRIPTORS = ["EmbeddingGen"]
+_EXAMPLES_FILE_NAME = "examples"
 
 
 class Executor(base_beam_executor.BaseBeamExecutor):
@@ -53,8 +55,11 @@ class Executor(base_beam_executor.BaseBeamExecutor):
         model = artifact_utils.get_single_instance(
             input_dict[embedding_specs.EMBEDDING_GEN_MODEL_KEY]
         )
+        output = artifact_utils.get_single_instance(
+            output_dict[embedding_specs.EMBEDDING_GEN_OUTPUT_KEY]
+        )
 
-        self._run_model_inferance(input_dict["examples"], model)
+        self._run_model_inferance(input_dict["examples"], model, output)
 
     def _parse_example(self, raw_example):
         example = tf.train.Example.FromString(raw_example)
@@ -65,10 +70,28 @@ class Executor(base_beam_executor.BaseBeamExecutor):
             )
         return triplet
 
+    def _to_example(self, triplet: Dict[str, PredictionResult]):
+        features = {
+            "anchor": tf.train.Feature(
+                float_list=tf.train.FloatList(value=triplet["anchor"].inference.numpy().tolist())  # type: ignore
+            ),
+            "positive": tf.train.Feature(
+                float_list=tf.train.FloatList(value=triplet["positive"].inference.numpy().tolist())  # type: ignore
+            ),
+            "negative": tf.train.Feature(
+                float_list=tf.train.FloatList(value=triplet["negative"].inference.numpy().tolist())  # type: ignore
+            ),
+        }
+        return tf.train.Example(features=tf.train.Features(feature=features))
+
     def _run_model_inferance(
-        self, examples: List[artifact.Artifact], model: artifact.Artifact
+        self,
+        examples: List[artifact.Artifact],
+        model: artifact.Artifact,
+        output_examples: artifact.Artifact,
     ) -> None:  # type: ignore
         example_uris = {"train": os.path.join(examples[0].uri, "Split-train")}
+        output_examples.split_names = '["train"]'
         # for example_artifact in examples:
         #     for split in artifact_utils.decode_split_names(example_artifact.split_names):
         #         example_uris[split] = artifact_utils.get_split_uri([example_artifact],split)
@@ -83,19 +106,20 @@ class Executor(base_beam_executor.BaseBeamExecutor):
             # records does not matter.
             raw_record_column_name="unused",
         )
-        
+
         keyed_model_handler = KeyedModelHandler(TFModelHandlerTensor(model.uri))
 
         with self._make_beam_pipeline() as pipeline:
-            data_list = []
             for split, example_uri in example_uris.items():
+                output_examples_split_uri = artifact_utils.get_split_uri(
+                    [output_examples], split)
                 tfxio = tfxio_factory([io_utils.all_files_pattern(example_uri)])
                 assert isinstance(
                     tfxio, record_based_tfxio.RecordBasedTFXIO
                 ), "Unable to use TFXIO {} as it does not support reading raw records.".format(
                     type(tfxio)
                 )
-                data = (
+                _ = (
                     pipeline
                     | f"ReadData[{split}]" >> tfxio.RawRecordBeamSource()
                     | f"ParseExample[{split}]" >> beam.Map(self._parse_example)
@@ -103,5 +127,11 @@ class Executor(base_beam_executor.BaseBeamExecutor):
                     | f"Inference[{split}]" >> RunInference(keyed_model_handler)
                     | f"GroupBy[{split}]" >> beam.GroupByKey()
                     | f"ToTriplets[{split}]" >> beam.ParDo(ToTriplets())
+                    | f"ToExample[{split}]" >> beam.Map(self._to_example)
+                    | f"WriteTFRecord[{split}]"
+                    >> beam.io.WriteToTFRecord(
+                        os.path.join(output_examples_split_uri, _EXAMPLES_FILE_NAME),
+                        file_name_suffix=".gz",
+                        coder=beam.coders.ProtoCoder(tf.train.Example), # type: ignore
+                    )
                 )
-                print(data)
