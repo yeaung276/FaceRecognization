@@ -28,3 +28,17 @@ Not good but ok XD [click here to download full video](https://github.com/yeaung
 
 TODO:
 find out how can I view pipeline run matadata for the cofiguration used for each component like split ratio, split path, validation results, etcs
+
+done
+create end to end production pipeline using tfx which can be run in cloud like vertax ai pipeline
+create custom example gen component which produce triplets that can be use to train model in the later stage using apache_beam programming paradiam
+create embedding gen component which convert the produced triplet images into embeddings and saved as TFRecord files
+
+create web to inference which use tfjs and opencvjs
+use tfprofilling to produced effeicient bundles of tensorflowjs bundles which decrease the loading time, bundle size and increase efficiency
+
+web
+run pip install -r requirement.txt
+run bash py_js_model_conversion.sh
+go to web
+run yarn build

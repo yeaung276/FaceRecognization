@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "model:export": "bash ../scripts/py_js_model_convertion.sh"
   },
   "devDependencies": {
+    "@tensorflow/tfjs-converter": "^4.12.0",
     "mirada": "^0.0.15",
     "typescript": "^5.0.2",
     "vite": "^4.4.5"

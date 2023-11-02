@@ -130,7 +130,7 @@
     "@types/seedrandom" "^2.4.28"
     seedrandom "^3.0.5"
 
-"@tensorflow/tfjs-converter@4.12.0":
+"@tensorflow/tfjs-converter@4.12.0", "@tensorflow/tfjs-converter@^4.12.0":
   version "4.12.0"
   resolved "https://registry.yarnpkg.com/@tensorflow/tfjs-converter/-/tfjs-converter-4.12.0.tgz#e756ad7dded900a981eb5ac41b93072611416400"
   integrity sha512-+UDwSO4PhobfmdqZTQQ41vvtEPMuFwZKEEcuS7zhydLK3L7Ro9+ak+rIrlWAHHrTS8knepincW1EpyDDjIkmNw==
