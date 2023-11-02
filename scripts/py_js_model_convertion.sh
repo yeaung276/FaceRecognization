@@ -1,0 +1,2 @@
+mkdir jsmodel
+tensorflowjs_converter models/mobile_net/saved_model.pb jsmodel

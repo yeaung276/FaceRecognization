@@ -1,0 +1,19 @@
+{
+  "name": "face-recognition-web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "mirada": "^0.0.15",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.12.0"
+  }
+}
