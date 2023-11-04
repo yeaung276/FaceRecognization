@@ -37,6 +37,7 @@ services:
       DATABASE_URL: postgresql://admin:password@postgres:5432
       REDIS_URL: redis
       REDIS_PORT: 6379
+      JWT_SECRET_KEY: 'JWTSECRETKEY'
     ports:
       - "8080:8080"
     volumes:

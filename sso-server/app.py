@@ -5,9 +5,11 @@ from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 
 from api_schema.requests import ProfileRequest
+from api_schema.response import ClaimResponse
 from repository.db import get_db
 from repository.profile import ProfileRepository
 from redis_codegen.codegen import get_redis, CodeGen
+from jwt.token import create_token
 
 ssoApp = FastAPI()
 
@@ -26,6 +28,10 @@ async def setup():
 @ssoApp.on_event('shutdown')
 async def shutdown():
     ssoApp.state.redis.close()
+    
+@ssoApp.get('/verify')
+def verify_token():
+    return 'to be implemented'
 
 @ssoApp.get('/claim')
 def get_token(code: str, db:Session=Depends(get_db)):
@@ -34,7 +40,8 @@ def get_token(code: str, db:Session=Depends(get_db)):
     except KeyError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Code expired or not exist")
     profile = ProfileRepository.get(db, profile_id)
-    return profile
+    token, expiry = create_token(profile.dict())
+    return ClaimResponse(token=token, expiry=expiry, type='barer')
 
 @ssoApp.get('/authenticate')
 async def authenticate(id: uuid.UUID, redirect_uri: str, db:Session=Depends(get_db)):

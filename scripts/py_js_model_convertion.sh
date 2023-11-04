@@ -1,4 +1,4 @@
-distination="web/public/jsmodel"
+distination="models/jsmodel"
 source="models/mobile_net"
 
 mkdir $distination

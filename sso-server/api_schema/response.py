@@ -1,5 +1,6 @@
 import uuid
 from pydantic import BaseModel
+import datetime
 
 class ProfileResponse(BaseModel):
     id: uuid.UUID
@@ -9,3 +10,8 @@ class ProfileResponse(BaseModel):
     class Config():
         orm_mode = True
         from_attributes=True
+        
+class ClaimResponse(BaseModel):
+    token: str
+    expiry: datetime.datetime
+    type: str
