@@ -90,11 +90,10 @@ class Executor(base_beam_executor.BaseBeamExecutor):
         model: artifact.Artifact,
         output_examples: artifact.Artifact,
     ) -> None:  # type: ignore
-        example_uris = {"train": os.path.join(examples[0].uri, "Split-train")}
-        output_examples.split_names = '["train"]'
-        # for example_artifact in examples:
-        #     for split in artifact_utils.decode_split_names(example_artifact.split_names):
-        #         example_uris[split] = artifact_utils.get_split_uri([example_artifact],split)
+        example_uris = {}
+        for example_artifact in examples:
+            for split in artifact_utils.decode_split_names(example_artifact.split_names):
+                example_uris[split] = artifact_utils.get_split_uri([example_artifact],split)
 
         tfxio_factory = tfxio_utils.get_tfxio_factory_from_artifact(
             examples,

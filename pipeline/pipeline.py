@@ -14,31 +14,27 @@ def create_pipeline(pipeline_name: str, pipeline_root: str, data_root: str,
                      metadata_path: str) -> Pipeline:
   """Creates a triplet pipeline with TFX."""
   # Brings data into the pipeline.
-#   example_gen = TripletExampleGen(
-#       input_base=data_root, 
-#       input_config=example_gen_pb2.Input(splits=[ # type: ignore
-#           example_gen_pb2.Input.Split(name='train', pattern='[0-2]'), # type: ignore
-#           example_gen_pb2.Input.Split(name='eval', pattern='[3-4]') # type: ignore
-#           ])
-#       )
+  example_gen = TripletExampleGen(
+      input_base=data_root, 
+      input_config=example_gen_pb2.Input(splits=[ # type: ignore
+          example_gen_pb2.Input.Split(name='train', pattern='[0-2]'), # type: ignore
+          example_gen_pb2.Input.Split(name='eval', pattern='[3-4]') # type: ignore
+          ])
+      )
   
   # Convert it into encodings
-  examples = Importer(
-      source_uri='mocks/pipeline_root/TripletExampleGen/examples/127', 
-      artifact_type=standard_artifacts.Examples
-    ).with_id('example_importer')
   model = Importer(
     source_uri='models/mobile_net',
     artifact_type=standard_artifacts.Model
   ).with_id('model_importer')
   
   encoding_gen = EmbeddingGen(
-      examples=examples.outputs['result'],
+      examples=example_gen.outputs['examples'],
       model=model.outputs['result']
     )
 
   # Following three components will be included in the pipeline.
-  components = [examples, model, encoding_gen]
+  components = [example_gen, model, encoding_gen]
 
   return Pipeline(
       pipeline_name=pipeline_name,

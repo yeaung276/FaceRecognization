@@ -25,7 +25,9 @@ class EmbeddingGen(base_beam_component.BaseBeamComponent):
           examples: A BaseChannel of type `standard_artifacts.Examples`, usually
             produced by an ExampleGen component. _required_
           model: A BaseChannel of type `standard_artifacts.Model`, usually produced
-            by a Trainer component.
+            by a Trainer component. __required__
+          output: A BasedChannel of type `standard_artifacts.Examples`, for saving generated
+          embeddings.
         """
         if not output:
             examples_artifact = standard_artifacts.Examples()
