@@ -1,4 +1,5 @@
 import uuid
+from typing import List
 from sqlalchemy.orm import Session
 
 from repository.models import Profile
@@ -20,3 +21,7 @@ class ProfileRepository:
     def get(db: Session, id: uuid.UUID) -> ProfileResponse:
         profile = db.query(Profile).get(id)
         return ProfileResponse.from_orm(profile)
+    
+    def get_by_username(db: Session, username: str) -> List[ProfileResponse]:
+        profiles = db.query(Profile).filter(Profile.user_name==username).all()
+        return [ProfileResponse.from_orm(p) for p in profiles]

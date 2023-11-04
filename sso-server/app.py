@@ -44,14 +44,13 @@ def get_token(code: str, db:Session=Depends(get_db)):
     return ClaimResponse(token=token, expiry=expiry, type='barer')
 
 @ssoApp.get('/authenticate')
-async def authenticate(id: uuid.UUID, redirect_uri: str, db:Session=Depends(get_db)):
-    try:
-        profile = ProfileRepository.get(db, id)
-    except:
+async def authenticate(username: str, redirect_uri: str, db:Session=Depends(get_db)):
+    profiles = ProfileRepository.get_by_username(db, username=username)
+    if len(profiles) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Credentail errors")
     # here goes authenticcation by neural net
     # end
-    code = CodeGen.create_one_time_code(ssoApp.state.redis, profile.id)
+    code = CodeGen.create_one_time_code(ssoApp.state.redis, profiles[0].id)
     return RedirectResponse(url=f'{redirect_uri}?code={code}')
         
         

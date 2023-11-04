@@ -9,4 +9,4 @@ class Profile(Base):
     
     id =  Column(UUID, index=True, primary_key=True)
     name = Column(String)
-    user_name = Column(String)
+    user_name = Column(String, unique=True)

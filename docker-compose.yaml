@@ -44,14 +44,33 @@ services:
       - "./sso-server:/code"
     depends_on:
       - "postgres"
+      - "redis"
     networks:
       - backend
+
+  modelserver:
+    container_name: model-server
+    build:
+      context: models/base-models
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - models:/data
+    
+
+    
 
 networks:
   backend:
     driver: bridge
 
 volumes:
-    postgres: 
-    pgadmin: 
-    redis:
+  postgres:
+  redis:
+  models:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./temp/modelsvr
