@@ -21,8 +21,6 @@ services:
     image: redis
     volumes:
       - redis:/data
-    ports:
-      - "6379:6379"
     command: ["redis-server", "--appendonly", "yes"]
     networks:
       - backend
@@ -56,10 +54,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - models:/data
-    
-
-    
+      - models:/usr/share/nginx/html/models
 
 networks:
   backend:
@@ -67,7 +62,17 @@ networks:
 
 volumes:
   postgres:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./temp/postgres
   redis:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./temp/redis
   models:
     driver: local
     driver_opts:
