@@ -1,6 +1,7 @@
 import { CascadeClassifier, Mat, RectVector, VideoCapture } from "mirada/dist/src/types/opencv";
 
-const CASCADE_WEIGHTS = 'haarcascade_frontalface_default.xml'
+const CASCADE_WEIGHTS = 'haarcascade_frontalface_default.xml';
+const FACE_MIN_WIDTH = 200;
 
 export default class Detector {
     src: Mat | null = null
@@ -33,8 +34,8 @@ export default class Detector {
         }
         this.capture.read(this.src)
         cv.cvtColor(this.src, this.gray, cv.COLOR_RGBA2GRAY, 0);
-        this.classifier.detectMultiScale(this.gray, this.faces, 1.1, 4, 0, new cv.Size(150, 150));
-        if (this.faces.get(0)) {
+        this.classifier.detectMultiScale(this.gray, this.faces, 1.1, 4, 0, new cv.Size(FACE_MIN_WIDTH, FACE_MIN_WIDTH));
+        if (this.faces.get(0) && this.faces.get(0).width >= FACE_MIN_WIDTH) {// this can be encoded into detect multiscale size param
             const face = this.faces.get(0)
             const point1 = new cv.Point(face.x, face.y);
             const point2 = new cv.Point(face.x + face.width, face.y + face.height);

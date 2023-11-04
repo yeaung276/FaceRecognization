@@ -1,26 +1,30 @@
 import { Mat } from "mirada/dist/src/types/opencv";
 import Detector from "./detection";
+import Encoder, { WIDTH, HEIGHT } from './encoding';
+import { CASCADE_CLASSIFIER_WEIGHTS_PATH } from './env';
+import { Tensor, tensor } from "@tensorflow/tfjs";
 
 const FPS = 30;
 const INFERENCE_PER_SECONOD = 2;
-const WIDTH = 64;
-const HEIGHT = 64;
 
 export default class App {
     detector: Detector
+
+    encoder: Encoder
 
     fpsHandler: NodeJS.Timer | null = null;
 
     currentFrame = 0;
 
-    isInferencing = false;
+    isSubmitting = false;
 
     constructor() {
         this.detector = new Detector()
+        this.encoder = new Encoder()
     }
 
     loadResources() {
-        const url = './haarcascade_frontalface_default.xml'
+        const url = CASCADE_CLASSIFIER_WEIGHTS_PATH
         let request = new XMLHttpRequest();
         request.open('GET', url, true);
         request.responseType = 'arraybuffer';
@@ -52,9 +56,10 @@ export default class App {
         }
     }
 
-    start() {
+    async start() {
         this.loadResources()
         this.loadVideoStream()
+        await this.encoder.prepare();
         document.getElementById('video')?.addEventListener('loadeddata', () => {
             if (INFERENCE_PER_SECONOD > FPS) {
                 throw Error('Inference per second cannot be larger than frame per second')
@@ -69,20 +74,28 @@ export default class App {
         let begin = Date.now();
         const [output, face] = this.detector.detect(WIDTH, HEIGHT)
         if (this.currentFrame === Math.floor(FPS / INFERENCE_PER_SECONOD)) {
-            this.inference(face)
+            this.submit(face)
         }
         cv.imshow('canvasOutput', output);
         const delay = 1000 / FPS - (Date.now() - begin);
         this.fpsHandler = setTimeout(() => this.nextFrame(), delay);
     }
 
-    async inference(face: Mat | null) {
-        if(this.isInferencing){
+    async submit(face: Mat | null) {
+        if(this.isSubmitting || !face){
             return
         }
-        this.isInferencing = true
-        await new Promise((res, rej) => setTimeout(res, 5000))
-        console.log('inference', face)
-        this.isInferencing = false
+        this.isSubmitting = true
+        const embedding = await new Promise<Tensor>((res, _) => {
+            const face_tensor = tensor(face.data, [HEIGHT, WIDTH, 3])
+            const result = this.encoder.encode(face_tensor) as Tensor
+            res(result)
+        })
+        await this.authenticate(embedding)
+        this.isSubmitting = false
+    }
+
+    async authenticate(tensor: Tensor){
+        tensor.to
     }
 }
