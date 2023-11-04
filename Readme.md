@@ -42,3 +42,5 @@ run pip install -r requirement.txt
 run bash py_js_model_conversion.sh
 go to web
 run yarn build
+
+run docker-compose up to spin up the services

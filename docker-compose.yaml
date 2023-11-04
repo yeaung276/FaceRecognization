@@ -15,21 +15,6 @@ services:
     networks:
       - backend
     restart: unless-stopped
-  
-  pgadmin:
-    container_name: pgadmin_container
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    volumes:
-       - pgadmin:/var/lib/pgadmin
-    ports:
-      - "5050:80"
-    networks:
-      - backend
-    restart: unless-stopped
 
   redis:
     container_name: redis_container
@@ -43,16 +28,23 @@ services:
       - backend
 
   ssoserver:
+    container_name: sso-server
     build: 
       context: sso-server
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgres:5432
       PORT: 8080
+      DATABASE_URL: postgresql://admin:password@postgres:5432
+      REDIS_URL: redis
+      REDIS_PORT: 6379
     ports:
       - "8080:8080"
+    volumes:
+      - "./sso-server:/code"
     depends_on:
       - "postgres"
+    networks:
+      - backend
 
 networks:
   backend:
