@@ -4,11 +4,16 @@ import uuid
 
 
 class FlatTriplets(beam.DoFn):
+    def mobile_net_preprocessor(self, x):
+        x /= 127.5
+        x -= 1.0
+        return x
+
     def process(self, element: dict):
         key = uuid.uuid4()
-        yield key, element["positive"]
-        yield key, element["anchor"]
-        yield key, element["negative"]
+        yield key, self.mobile_net_preprocessor(element["positive"])
+        yield key, self.mobile_net_preprocessor(element["anchor"])
+        yield key, self.mobile_net_preprocessor(element["negative"])
 
 
 class ToTriplets(beam.DoFn):
