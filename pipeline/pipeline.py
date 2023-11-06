@@ -16,11 +16,8 @@ def create_pipeline(pipeline_name: str, pipeline_root: str, data_root: str,
   # Brings data into the pipeline.
   example_gen = TripletExampleGen(
       input_base=data_root, 
-      input_config=example_gen_pb2.Input(splits=[ # type: ignore
-          example_gen_pb2.Input.Split(name='train', pattern='[0-2]'), # type: ignore
-          example_gen_pb2.Input.Split(name='eval', pattern='[3-4]') # type: ignore
-          ]),
-      triplet_config={'sample_per_class': 10}
+      sample_per_class=10, 
+      eval_split_ratio=0.5
       )
   
   # Convert it into encodings

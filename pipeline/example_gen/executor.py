@@ -1,141 +1,93 @@
-import random
 import logging
-import json
-from typing import Dict, Any
+import math
+from typing import Dict, Any, List, Tuple
 
 import tensorflow as tf
-from tfx.types import standard_component_specs
+
+from tfx.types import artifact
+from tfx.types import artifact_utils
+from tfx.proto import example_gen_pb2
 from tfx.dsl.io import fileio
-from tfx.components.example_gen.base_example_gen_executor import BaseExampleGenExecutor
+from tfx.dsl.io.filesystem import PathType
+from tfx.dsl.components.base import base_beam_executor
+from tfx.components.example_gen import write_split
+from tfx.components.util import examples_utils
 
 import apache_beam as beam
-from apache_beam.io.filesystems import FileSystems
 
-from pipeline.example_gen.data_specs import triplet_component_config
+from pipeline.example_gen import component_specs
+from pipeline.example_gen import transforms
 
-
-class _ImagesToTriplets(beam.PTransform):
-    """Read Images and transform to Triplets."""
-
-    def __init__(self, base_uri: str, split_pattern: str, sample_per_class=5):
-        """Init method for _ImagesToTriplet."""
-        self.input_base_uri = base_uri
-        self.split_pattern = split_pattern
-        self.sample_per_class = sample_per_class
-
-    def _get_triplets(self):
-        image_folders = fileio.glob(f"{self.input_base_uri}/{self.split_pattern}")
-        assert (
-            len(image_folders) > 1
-        ), f"excepted to have minimum folder of 2 to generate triplet instead get {len(image_folders)} folders."
-        for folder in image_folders:
-            images = fileio.glob(f"{folder}/*")
-            if len(images) < self.sample_per_class:
-                logging.warning(f"folder {folder} only has {len(images)} images.")
-            # select anchor images
-            anchors = random.choices(
-                images, k=min(self.sample_per_class, len(images) // 2)
-            )
-            for anchor in anchors:
-                # select positive match
-                positive = random.choice(images)
-                while positive in anchors:
-                    positive = random.choice(images)
-                # select negative match
-                negative_folder = random.choice(image_folders)
-                while negative_folder == folder:
-                    negative_folder = random.choice(image_folders)
-                negative = random.choice(fileio.glob(f"{negative_folder}/*"))
-                # appand triplet to the list of triplet
-                yield (positive, anchor, negative)
-
-    def expand(self, pipeline: beam.Pipeline):
-        logging.info("Processing input image data %s to Triplets.")
-        triplets = self._get_triplets()
-        return pipeline | beam.Create(triplets)
+SPLITS = ['train', 'eval']
 
 
-class _TripletToExample(beam.PTransform):
-    """Read triplets and convert them into TFRecords"""
-
-    def __init__(self):
-        """Init method for _TripletToExample.
-
-        Args:
-          exec_properties: A dict of execution properties.
-            - input_base: input dir that contains image data.
-        """
-        pass
-
-    def _process_file(self, path):
-        with FileSystems.open(path) as file:
-            tensor = tf.io.decode_image(file.read(), channels=3)
-            return tensor
-
-    def _read_triplets(self, triplet: tuple):
-        return tuple(map(self._process_file, triplet))
-
-    def _to_example(self, triplet: tuple):
-        feature = {
-            "positive": self._bytes_feature(triplet[0]),
-            "anchor": self._bytes_feature(triplet[1]),
-            "negative": self._bytes_feature(triplet[2]),
-        }
-        # Create a Features message using tf.train.Example.
-        return tf.train.Example(features=tf.train.Features(feature=feature))
-
-    @staticmethod
-    def _bytes_feature(value):
-        """Returns a bytes_list from a string / byte."""
-        if isinstance(value, type(tf.constant(0))):
-            value = tf.io.serialize_tensor(value).numpy()
-        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
-
-    def expand(self, pipeline: beam.Pipeline):
-        logging.info("Processing triplets into TFExamples")
-        examples = pipeline | beam.Map(self._read_triplets) | beam.Map(self._to_example)
-        return examples
-
-
-class TripletTransform(beam.PTransform):
-    """Combine ImageToTriplet and TripletToExample"""
-
-    def __init__(self, exec_properties: Dict[str, Any], split_pattern: str):
-        """
-        Args:
-          exec_properties: A dict of execution properties.
-            - input_base: input dir that contains image data.
-            - custom_config: a dict containing sample_per_class
-          sample_per_class: number of sample from one folder. If number of images
-            in the folder is not enought, only half of the files will be selected
-        """
-        self.input_base_uri = exec_properties[standard_component_specs.INPUT_BASE_KEY]
-        self.split_pattern = split_pattern or "*"
-        if exec_properties.get(standard_component_specs.CUSTOM_CONFIG_KEY) is None:
-            logging.info(
-                f"sample_per_class is not specified. Default to 5 sample_per_class."
-            )
-            self.sample_per_class = 5
-        else:
-            config = json.loads(
-                exec_properties[standard_component_specs.CUSTOM_CONFIG_KEY]
-            )
-            self.sample_per_class = config[triplet_component_config.SAMPLE_PER_CLASS]
-
-    def expand(self, pipeline: beam.Pipeline):
-        return (
-            pipeline
-            | "ImagesToTriplet"
-            >> _ImagesToTriplets(
-                self.input_base_uri, self.split_pattern, self.sample_per_class
-            )
-            | "TripletToTFExample" >> _TripletToExample()
-        )
-
-
-class Executor(BaseExampleGenExecutor):
+class Executor(base_beam_executor.BaseBeamExecutor):
     """TFX triplet example gen executor."""
+    
+    def Do(
+      self,
+      input_dict: Dict[str, List[artifact.Artifact]],
+      output_dict: Dict[str, List[artifact.Artifact]],
+      exec_properties: Dict[str, Any],
+    ) -> None:
+        """Take input data source and generates serialized data splits.
 
-    def GetInputSourceToExamplePTransform(self) -> beam.PTransform:
-        """Returns PTransform for Triplet TF examples."""
-        return TripletTransform  # type: ignore
+        Args:
+        output_dict: Output dict from output key to a list of Artifacts.
+            - examples: splits of serialized records.
+        exec_properties: A dict of execution properties.
+            - input_base: an external directory containing the data files.
+            - sample_per_class: number of sample per class to choose from.
+            - eval_split_ratio: portion to split for eval dataset
+
+        Returns:
+        None
+        """
+        self._log_startup(input_dict, output_dict, exec_properties)
+
+
+        examples_artifact = artifact_utils.get_single_instance(
+            output_dict[component_specs.EXAMPLES_KEY])
+        examples_artifact.split_names = artifact_utils.encode_split_names(SPLITS)
+        input_base_uri = exec_properties.get(component_specs.INPUT_BASE_KEY)
+        sample_per_class = exec_properties.get(component_specs.SAMPLE_PER_CLASS, 5)
+        eval_split_ratio = exec_properties.get(component_specs.EVAL_SPLIT_RATIO, 0.5)
+
+        classes = fileio.glob(f"{input_base_uri}/*")
+        
+        logging.info(f'{len(classes)} found. Generating examples with {sample_per_class} per folder.')
+        with self._make_beam_pipeline() as pipeline:
+            for split_name, paths in self.get_folder_splits(classes, eval_split_ratio):
+                _ = (
+                    pipeline
+                    | f'InputToRecord[{split_name}]' >> transforms.TripletTransform(paths, sample_per_class)
+                    | f'WriteSplit[{split_name}]' >> write_split.WriteSplit(
+                        artifact_utils.get_split_uri([examples_artifact], split_name),
+                        example_gen_pb2.FORMAT_TFRECORDS_GZIP
+                        )
+                    )
+
+
+        for output_examples_artifact in output_dict[component_specs.EXAMPLES_KEY]:
+            examples_utils.set_payload_format(
+                output_examples_artifact, example_gen_pb2.FORMAT_TF_EXAMPLE)
+
+        for output_examples_artifact in output_dict[component_specs.EXAMPLES_KEY]:
+            examples_utils.set_file_format(
+                output_examples_artifact,
+                write_split.to_file_format_str(example_gen_pb2.FORMAT_TFRECORDS_GZIP))
+
+        logging.info('Examples generated.')
+    
+    def get_folder_splits(self, folders: List[PathType], eval_ratio: float) -> List[Tuple[str, List[PathType]]]:
+        train_cutoff = math.floor(len(folders) * (1-eval_ratio))
+        assert (
+            len(folders[:train_cutoff]) > 1
+        ), f"excepted to have minimum folder of 2 to generate triplet instead get {len(folders[:train_cutoff])} folders.(Train split)"
+        assert (
+            len(folders[train_cutoff:]) > 1
+        ), f"excepted to have minimum folder of 2 to generate triplet instead get {len(folders[train_cutoff:])} folders.(Eval split)"
+        return [
+            ('train', folders[:train_cutoff]),
+            ('eval', folders[train_cutoff:])
+            ]

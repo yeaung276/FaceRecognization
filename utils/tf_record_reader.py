@@ -20,6 +20,7 @@ def read_examplegen_output(path: str, compression_type = 'GZIP', sample=10):
         
 def inspect_triplets(root: str):
     train_examples = list(read_examplegen_output(root))
+    print(train_examples)
     fig, axs = plt.subplots(len(train_examples), 3)
     for idx, example in enumerate(train_examples):
         axs[idx, 0].imshow(example['positive'].numpy())

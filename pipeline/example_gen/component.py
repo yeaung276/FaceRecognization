@@ -1,16 +1,18 @@
 from typing import Optional, Union
 
 from tfx.dsl.components.base import executor_spec
-from tfx.components.example_gen import component
-from tfx.dsl.placeholder import placeholder
-from tfx.orchestration import data_types
+from tfx.dsl.components.base import base_beam_component
 from tfx.proto import example_gen_pb2
-from tfx.proto import range_config_pb2
+from tfx.components.example_gen import driver
+from tfx.types import standard_component_specs
+from tfx.types import channel
+from tfx.types import standard_artifacts
 
 from pipeline.example_gen import executor
+from pipeline.example_gen import component_specs
 
 
-class TripletExampleGen(component.FileBasedExampleGen):
+class TripletExampleGen(base_beam_component.BaseBeamComponent):
     """TFX TripletExampleGen component.
 
     The triplet examplegen component takes image data, and generates train
@@ -22,45 +24,27 @@ class TripletExampleGen(component.FileBasedExampleGen):
                    and eval examples.
     """
 
+    SPEC_CLASS = component_specs.TripletGenComponentSpec
     EXECUTOR_SPEC = executor_spec.BeamExecutorSpec(executor.Executor)
 
     def __init__(
         self,
         input_base: Optional[str] = None,
-        input_config: Optional[
-            Union[example_gen_pb2.Input, data_types.RuntimeParameter]  # type: ignore
-        ] = None,
-        output_config: Optional[
-            Union[example_gen_pb2.Output, data_types.RuntimeParameter]  # type: ignore
-        ] = None,
-        range_config: Optional[
-            Union[
-                placeholder.Placeholder,
-                range_config_pb2.RangeConfig,  # type: ignore
-                data_types.RuntimeParameter,
-            ]
-        ] = None,
-        triplet_config: Optional[dict] = None,
+        eval_split_ratio: Optional[float] = None,
+        sample_per_class: Optional[int] = 5
     ):
         """Construct a TripletExampleGen component.
 
         Args:
           input_base: an external directory containing the CSV files.
-          input_config: An example_gen_pb2.Input instance, providing input
-            configuration. If unset, the files under input_base will be treated as a
-            single split.
-          output_config: An example_gen_pb2.Output instance, providing output
-            configuration. If unset, default splits will be 'train' and 'eval' with
-            size 2:1.
-          range_config: An optional range_config_pb2.RangeConfig instance,
-            specifying the range of span values to consider. If unset, driver will
-            default to searching for latest span with no restrictions.
-          triplet_config: dict containing sample_per_class
+          sample_per_class: number of sample to choose per one class
+          eval_split_ratio: split ratio for eval
         """
-        super().__init__(
+        example_artifacts = channel.Channel(type=standard_artifacts.Examples)
+
+        spec = component_specs.TripletGenComponentSpec(
             input_base=input_base,
-            input_config=input_config,
-            output_config=output_config,
-            custom_config=triplet_config,
-            range_config=range_config,
-        )
+            eval_split_ratio=eval_split_ratio,
+            sample_per_class=sample_per_class,
+            examples=example_artifacts)
+        super().__init__(spec=spec)
