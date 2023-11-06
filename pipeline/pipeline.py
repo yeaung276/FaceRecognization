@@ -19,12 +19,13 @@ def create_pipeline(pipeline_name: str, pipeline_root: str, data_root: str,
       input_config=example_gen_pb2.Input(splits=[ # type: ignore
           example_gen_pb2.Input.Split(name='train', pattern='[0-2]'), # type: ignore
           example_gen_pb2.Input.Split(name='eval', pattern='[3-4]') # type: ignore
-          ])
+          ]),
+      triplet_config={'sample_per_class': 10}
       )
   
   # Convert it into encodings
   model = Importer(
-    source_uri='models/mobile_net',
+    source_uri='models/base-models/mobile-net',
     artifact_type=standard_artifacts.Model
   ).with_id('model_importer')
   

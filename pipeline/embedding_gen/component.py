@@ -31,7 +31,6 @@ class EmbeddingGen(base_beam_component.BaseBeamComponent):
         """
         if not output:
             examples_artifact = standard_artifacts.Examples()
-            examples_artifact.split_names = examples.get()[0].split_names  # type: ignore
             output_data = channel_utils.as_channel([examples_artifact])
         spec = embedding_gen_spec.EmbeddingGenSpec(
             examples=examples, model=model, output=output_data  # type: ignore

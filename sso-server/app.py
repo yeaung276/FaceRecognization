@@ -8,6 +8,7 @@ from api_schema.requests import ProfileRequest
 from api_schema.response import ClaimResponse
 from repository.db import get_db
 from repository.profile import ProfileRepository
+from repository.exception import UserNameError
 from redis_codegen.codegen import get_redis, CodeGen
 from jwt.token import create_token
 
@@ -57,4 +58,7 @@ async def authenticate(username: str, redirect_uri: str, db:Session=Depends(get_
 
 @ssoApp.post('/register')
 async def register(request: ProfileRequest, db:Session=Depends(get_db)):
-    return ProfileRepository.insert(db, request)
+    try:
+        return ProfileRepository.insert(db, request)
+    except UserNameError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="username already taken")

@@ -1,22 +1,27 @@
 import uuid
 from typing import List
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from repository.models import Profile
 from api_schema.requests import ProfileRequest
 from api_schema.response import ProfileResponse
+from repository.exception import UserNameError
 
 class ProfileRepository:
     def insert(db: Session, profile: ProfileRequest) -> ProfileResponse:
-        new_profile = Profile(
-            id=uuid.uuid4(),
-            name=profile.name,
-            user_name=profile.user_name
-        )
-        db.add(new_profile)
-        db.commit()
-        db.refresh(new_profile)
-        return ProfileResponse.from_orm(new_profile)
+        try:
+            new_profile = Profile(
+                id=uuid.uuid4(),
+                name=profile.name,
+                user_name=profile.user_name
+            )
+            db.add(new_profile)
+            db.commit()
+            db.refresh(new_profile)
+            return ProfileResponse.from_orm(new_profile)
+        except IntegrityError:
+            raise UserNameError()
     
     def get(db: Session, id: uuid.UUID) -> ProfileResponse:
         profile = db.query(Profile).get(id)

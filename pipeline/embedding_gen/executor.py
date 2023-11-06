@@ -90,6 +90,7 @@ class Executor(base_beam_executor.BaseBeamExecutor):
         model: artifact.Artifact,
         output_examples: artifact.Artifact,
     ) -> None:  # type: ignore
+        output_examples.split_names = examples[0].split_names  # type: ignore
         example_uris = {}
         for example_artifact in examples:
             for split in artifact_utils.decode_split_names(example_artifact.split_names):
