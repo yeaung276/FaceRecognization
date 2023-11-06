@@ -1,10 +1,12 @@
 from typing import Tuple, Any, Iterable
 import apache_beam as beam
 import uuid
+import tensorflow as tf
 
 
 class FlatTriplets(beam.DoFn):
     def mobile_net_preprocessor(self, x):
+        x = tf.cast(x, tf.float32)
         x /= 127.5
         x -= 1.0
         return x
