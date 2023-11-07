@@ -15,7 +15,7 @@ from apache_beam.ml.inference.tensorflow_inference import TFModelHandlerTensor
 
 import tensorflow as tf
 
-from pipeline.embedding_gen.do_fns import FlatTriplets, ToTriplets
+from pipeline.embedding_gen.do_fns import ParseAndFlatTriplets, ToTripletExample
 import pipeline.embedding_gen.embedding_gen_spec as embedding_specs
 
 _TELEMETRY_DESCRIPTORS = ["EmbeddingGen"]
@@ -61,29 +61,6 @@ class Executor(base_beam_executor.BaseBeamExecutor):
 
         self._run_model_inferance(input_dict["examples"], model, output)
 
-    def _parse_example(self, raw_example):
-        example = tf.train.Example.FromString(raw_example)
-        triplet = {}
-        for key, value in example.features.feature.items():
-            triplet[key] = tf.io.parse_tensor(
-                value.bytes_list.value[0], out_type=tf.uint8
-            )
-        return triplet
-
-    def _to_example(self, triplet: Dict[str, PredictionResult]):
-        features = {
-            "anchor": tf.train.Feature(
-                float_list=tf.train.FloatList(value=triplet["anchor"].inference.numpy().tolist())  # type: ignore
-            ),
-            "positive": tf.train.Feature(
-                float_list=tf.train.FloatList(value=triplet["positive"].inference.numpy().tolist())  # type: ignore
-            ),
-            "negative": tf.train.Feature(
-                float_list=tf.train.FloatList(value=triplet["negative"].inference.numpy().tolist())  # type: ignore
-            ),
-        }
-        return tf.train.Example(features=tf.train.Features(feature=features))
-
     def _run_model_inferance(
         self,
         examples: List[artifact.Artifact],
@@ -122,12 +99,10 @@ class Executor(base_beam_executor.BaseBeamExecutor):
                 _ = (
                     pipeline
                     | f"ReadData[{split}]" >> tfxio.RawRecordBeamSource()
-                    | f"ParseExample[{split}]" >> beam.Map(self._parse_example)
-                    | f"Flatten[{split}]" >> beam.ParDo(FlatTriplets())
+                    | f"ParseAndFlatten[{split}]" >> beam.ParDo(ParseAndFlatTriplets())
                     | f"Inference[{split}]" >> RunInference(keyed_model_handler)
                     | f"GroupBy[{split}]" >> beam.GroupByKey()
-                    | f"ToTriplets[{split}]" >> beam.ParDo(ToTriplets())
-                    | f"ToExample[{split}]" >> beam.Map(self._to_example)
+                    | f"ToTripletExample[{split}]" >> beam.ParDo(ToTripletExample())
                     | f"WriteTFRecord[{split}]"
                     >> beam.io.WriteToTFRecord(
                         os.path.join(output_examples_split_uri, _EXAMPLES_FILE_NAME),
