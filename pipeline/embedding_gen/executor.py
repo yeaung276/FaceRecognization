@@ -107,7 +107,7 @@ class Executor(base_beam_executor.BaseBeamExecutor):
             raw_record_column_name="unused",
         )
 
-        keyed_model_handler = KeyedModelHandler(TFModelHandlerTensor(model.uri))
+        keyed_model_handler = KeyedModelHandler(TFModelHandlerTensor(model.uri, max_batch_size=50))
 
         with self._make_beam_pipeline() as pipeline:
             for split, example_uri in example_uris.items():

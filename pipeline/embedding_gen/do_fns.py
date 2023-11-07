@@ -6,7 +6,7 @@ import tensorflow as tf
 
 class FlatTriplets(beam.DoFn):
     def mobile_net_preprocessor(self, x):
-        x = tf.cast(x, tf.float32)
+        x = tf.cast(x, tf.float16)
         x /= 127.5
         x -= 1.0
         return x
