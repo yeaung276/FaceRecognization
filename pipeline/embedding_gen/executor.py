@@ -59,13 +59,19 @@ class Executor(base_beam_executor.BaseBeamExecutor):
             output_dict[embedding_specs.EMBEDDING_GEN_OUTPUT_KEY]
         )
 
-        self._run_model_inferance(input_dict["examples"], model, output)
+        self._run_model_inferance(
+            input_dict["examples"],
+            model,
+            output, 
+            exec_properties.get(embedding_specs.EMBEDDING_GEN_BATCH_KEY, None)
+        )
 
     def _run_model_inferance(
         self,
         examples: List[artifact.Artifact],
         model: artifact.Artifact,
         output_examples: artifact.Artifact,
+        batch_size: int | None
     ) -> None:  # type: ignore
         output_examples.split_names = examples[0].split_names  # type: ignore
         example_uris = {}
@@ -84,7 +90,7 @@ class Executor(base_beam_executor.BaseBeamExecutor):
             raw_record_column_name="unused",
         )
 
-        keyed_model_handler = KeyedModelHandler(TFModelHandlerTensor(model.uri, max_batch_size=50))
+        keyed_model_handler = KeyedModelHandler(TFModelHandlerTensor(model.uri, max_batch_size=batch_size))
 
         with self._make_beam_pipeline() as pipeline:
             for split, example_uri in example_uris.items():

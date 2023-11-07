@@ -18,6 +18,7 @@ class EmbeddingGen(base_beam_component.BaseBeamComponent):
         examples: channel.Channel,
         model: channel.BaseChannel,
         output: Optional[channel.Channel] = None,
+        batch_size: Optional[int] = None
     ):
         """Construct an EmbeddingGen component.
 
@@ -33,6 +34,9 @@ class EmbeddingGen(base_beam_component.BaseBeamComponent):
             examples_artifact = standard_artifacts.Examples()
             output_data = channel_utils.as_channel([examples_artifact])
         spec = embedding_gen_spec.EmbeddingGenSpec(
-            examples=examples, model=model, output=output_data  # type: ignore
+            examples=examples, 
+            model=model, 
+            output=output_data,  # type: ignore
+            batch_size=batch_size
         )
         super().__init__(spec=spec)

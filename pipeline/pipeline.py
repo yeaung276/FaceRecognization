@@ -28,7 +28,8 @@ def create_pipeline(pipeline_name: str, pipeline_root: str, data_root: str,
   
   encoding_gen = EmbeddingGen(
       examples=example_gen.outputs['examples'],
-      model=model.outputs['result']
+      model=model.outputs['result'],
+      batch_size=500
     )
 
   # Following three components will be included in the pipeline.
