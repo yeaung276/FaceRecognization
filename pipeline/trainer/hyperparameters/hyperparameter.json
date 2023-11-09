@@ -1,0 +1,9 @@
+{
+    "lr": 1e-3,
+    "alpha": 1.0,
+    "batch_size": 128,
+    "intermediate_layer": 32,
+    "output_layer": 16,
+    "dropout_strength": 0.4, 
+    "epoch": 20
+}

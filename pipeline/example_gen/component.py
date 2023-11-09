@@ -2,9 +2,6 @@ from typing import Optional, Union
 
 from tfx.dsl.components.base import executor_spec
 from tfx.dsl.components.base import base_beam_component
-from tfx.proto import example_gen_pb2
-from tfx.components.example_gen import driver
-from tfx.types import standard_component_specs
 from tfx.types import channel
 from tfx.types import standard_artifacts
 

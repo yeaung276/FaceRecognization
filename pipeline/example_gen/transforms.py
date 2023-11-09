@@ -2,7 +2,6 @@ import random
 import logging
 from typing import List
 
-
 import tensorflow as tf
 from tfx.dsl.io import fileio
 from tfx.dsl.io.filesystem import PathType

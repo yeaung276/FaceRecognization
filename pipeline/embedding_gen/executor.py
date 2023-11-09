@@ -1,22 +1,21 @@
-from typing import Dict, List, Any
 import os
+from typing import Dict, List, Any
 
-from tfx.dsl.components.base import base_beam_executor
-from tfx.types import artifact, artifact_utils
-from tfx.components.util import tfxio_utils
 from tfx.utils import io_utils
+from tfx.components.util import tfxio_utils
 from tfx_bsl.tfxio import record_based_tfxio
-from tfx_bsl.public.beam import run_inference
-from tfx_bsl.public.proto import model_spec_pb2
+from tfx.types import artifact, artifact_utils
+from tfx.dsl.components.base import base_beam_executor
+
 import apache_beam as beam
-from apache_beam.ml.inference.base import RunInference, PredictionResult
+from apache_beam.ml.inference.base import RunInference
 from apache_beam.ml.inference.base import KeyedModelHandler
 from apache_beam.ml.inference.tensorflow_inference import TFModelHandlerTensor
 
 import tensorflow as tf
 
-from pipeline.embedding_gen.do_fns import ParseAndFlatTriplets, ToTripletExample
 import pipeline.embedding_gen.embedding_gen_spec as embedding_specs
+from pipeline.embedding_gen.do_fns import ParseAndFlatTriplets, ToTripletExample
 
 _TELEMETRY_DESCRIPTORS = ["EmbeddingGen"]
 _EXAMPLES_FILE_NAME = "examples"

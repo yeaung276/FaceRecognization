@@ -16,7 +16,7 @@ class ParseAndFlatTriplets(beam.DoFn):
         return triplet
     def mobile_net_preprocessor(self, x):
         x = tf.cast(x, tf.float16)
-        x /= 127.5
+        x /= 127.5 # type: ignore
         x -= 1.0
         return x
 
