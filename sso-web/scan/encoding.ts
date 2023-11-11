@@ -11,8 +11,8 @@ export default class Encoder {
 
   constructor() {}
 
-  async prepare() {
-    this.model = await loadGraphModel(GRAPH_MODEL_PATH);
+  async prepare(path = GRAPH_MODEL_PATH) {
+    this.model = await loadGraphModel(path);
   }
 
   encode(face: Tensor) {

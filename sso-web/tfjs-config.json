@@ -1,0 +1,1 @@
+{"kernels":["ExpandDims","RealDiv","Sub","Add","Relu6","FusedConv2D","fusedConv2d__op","FusedDepthwiseConv2D","fusedDepthwiseConv2d__op","PadV2","Cast","Mean","Identity"],"backends":["cpu"],"models":["../models/jsmodels/mobile-net/model.json"],"outputPath":"./custom_tfjs","forwardModeOnly":true}
