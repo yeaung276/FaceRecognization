@@ -1,0 +1,46 @@
+.button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.button-container button {
+  display: block;
+  padding: 0.5rem;
+  margin: 0.5rem;
+  width: 30rem;
+}
+/* =============================================== */
+.input-container {
+  margin: 3rem 5rem;
+}
+.input-container label {
+  display: block;
+  padding: 0.3rem;
+  margin-top: 1rem;
+}
+.input-container input {
+  padding: 0.5rem;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid;
+}
+.input-container input:focus-visible {
+  border: 0;
+  outline: none;
+  border-bottom: 1px solid;
+}
+/* ===================================================== */
+.divider {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.divider::before,
+.divider::after {
+  flex: 1;
+  content: "";
+  padding: 1px;
+  background-color: rgb(231, 231, 231);
+  margin: 2rem;
+}

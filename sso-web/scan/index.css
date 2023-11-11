@@ -1,0 +1,12 @@
+.video-output {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.error-message {
+  margin: 1rem;
+  text-align: center;
+  color: #f23636;
+  background-color: #fac5c5;
+  padding: 0.5rem;
+}

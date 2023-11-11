@@ -1,13 +1,19 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, conlist
 
 class Vector(BaseModel):
-    vector: list[str]
+    vector: conlist(float, min_length=1024, max_length=1024)
+
 
 class ProfileRequest(BaseModel):
     id: Optional[str] = ''
     user_name: str
     name: str
-    face_embedding: Optional[Vector] = None
+    face_embedding: Vector
+    
+class AuthRequest(BaseModel):
+    user_name: str
+    face_embedding: Vector
+    redirect_uri: str
     
     

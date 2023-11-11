@@ -4,7 +4,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 
-from api_schema.requests import ProfileRequest
+from api_schema.requests import ProfileRequest, AuthRequest
 from api_schema.response import ClaimResponse
 from repository.db import get_db
 from repository.profile import ProfileRepository
@@ -44,15 +44,15 @@ def get_token(code: str, db:Session=Depends(get_db)):
     token, expiry = create_token(profile.dict())
     return ClaimResponse(token=token, expiry=expiry, type='barer')
 
-@ssoApp.get('/authenticate')
-async def authenticate(username: str, redirect_uri: str, db:Session=Depends(get_db)):
-    profiles = ProfileRepository.get_by_username(db, username=username)
+@ssoApp.post('/authenticate')
+async def authenticate(request: AuthRequest, db:Session=Depends(get_db)):
+    profiles = ProfileRepository.get_by_username(db, username=request.user_name)
     if len(profiles) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Credentail errors")
     # here goes authenticcation by neural net
     # end
     code = CodeGen.create_one_time_code(ssoApp.state.redis, profiles[0].id)
-    return RedirectResponse(url=f'{redirect_uri}?code={code}')
+    return RedirectResponse(url=f'{request.redirect_uri}?code={code}')
         
         
 

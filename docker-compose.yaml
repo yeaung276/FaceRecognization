@@ -43,19 +43,19 @@ services:
       - "redis"
     networks:
       - backend
-  ssoweb:
-    container_name: sso-web
-    build:
-      context: sso-web
-      dockerfile: Dockerfile.dev
-    volumes:
-      - "./sso-web:/app"
-    ports:
-      - "5173:5173"
-    networks:
-      - backend
-    depends_on:
-      - "ssoserver"
+  # ssoweb:
+  #   container_name: sso-web
+  #   build:
+  #     context: sso-web
+  #     dockerfile: Dockerfile.dev
+  #   volumes:
+  #     - "./sso-web:/app"
+  #   ports:
+  #     - "5173:5173"
+  #   networks:
+  #     - backend
+  #   depends_on:
+  #     - "ssoserver"
   modelserver:
     container_name: model-server
     build:

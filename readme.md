@@ -44,9 +44,3 @@ go to web
 run yarn build
 
 run docker-compose up to spin up the services
-
-mocks/example_gen/4/1, 4/2, 3/1
-mocks/example_gen/3/1, 3/2, 4/1
-
-mocks/example_gen/1/1, 1/2, 2/2
-mocks/example_gen/2/2, 2/1, 1/2
