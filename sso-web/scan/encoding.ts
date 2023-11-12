@@ -1,4 +1,3 @@
-import "@tensorflow/tfjs-core";
 import { GraphModel, loadGraphModel } from "@tensorflow/tfjs-converter";
 import { GRAPH_MODEL_PATH } from "./env";
 import { Tensor } from "@tensorflow/tfjs";
