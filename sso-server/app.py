@@ -1,7 +1,5 @@
-import uuid
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
-from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 
 from api_schema.requests import ProfileRequest, AuthRequest
@@ -11,6 +9,7 @@ from repository.profile import ProfileRepository
 from repository.exception import UserNameError
 from redis_codegen.codegen import get_redis, CodeGen
 from jwt.token import create_token
+from encoder.background_service import BackgroundService
 
 ssoApp = FastAPI()
 
@@ -35,18 +34,19 @@ def verify_token():
     return 'to be implemented'
 
 @ssoApp.get('/claim')
-def get_token(code: str, db:Session=Depends(get_db)):
+def get_token(code: str, profile_repo: ProfileRepository = Depends(ProfileRepository)):
     try:
         profile_id = CodeGen.claim_one_time_code(ssoApp.state.redis, code)
     except KeyError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Code expired or not exist")
-    profile = ProfileRepository.get(db, profile_id)
+    profile = profile_repo.get(profile_id)
     token, expiry = create_token(profile.dict())
     return ClaimResponse(token=token, expiry=expiry, type='barer')
 
 @ssoApp.post('/authenticate')
-async def authenticate(request: AuthRequest, db:Session=Depends(get_db)):
-    profiles = ProfileRepository.get_by_username(db, username=request.user_name)
+async def authenticate(request: AuthRequest, 
+                       profile_repo: ProfileRepository=Depends(ProfileRepository)):
+    profiles = profile_repo.get_by_username(username=request.user_name)
     if len(profiles) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Credentail errors")
     # here goes authenticcation by neural net
@@ -57,8 +57,12 @@ async def authenticate(request: AuthRequest, db:Session=Depends(get_db)):
         
 
 @ssoApp.post('/register')
-async def register(request: ProfileRequest, db:Session=Depends(get_db)):
+async def register(request: ProfileRequest, 
+                   background: BackgroundService = Depends(BackgroundService), 
+                   profile_repo: ProfileRepository = Depends(ProfileRepository)):
     try:
-        return ProfileRepository.insert(db, request)
+        profile = profile_repo.insert(request)
+        background.start_add_vector_task(request.face_embedding, profile.id)
+        return profile
     except UserNameError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="username already taken")

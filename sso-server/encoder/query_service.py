@@ -1,0 +1,3 @@
+class VectorQuery:
+    def __init__(self):
+        ...
