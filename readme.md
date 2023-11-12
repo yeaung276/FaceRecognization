@@ -35,7 +35,7 @@ create custom example gen component which produce triplets that can be use to tr
 create embedding gen component which convert the produced triplet images into embeddings and saved as TFRecord files
 
 create web to inference which use tfjs and opencvjs
-use tfprofilling to produced effeicient bundles of tensorflowjs bundles which decrease the loading time, bundle size and increase efficiency
+use tfprofilling to produced effeicient bundles of tensorflowjs bundles which decrease the loading time, bundle size and increase efficiency bundle size - unoptimized - 1.8Mb - 1.7Mb 5% reduction
 
 web
 run pip install -r requirement.txt
