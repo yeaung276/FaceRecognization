@@ -26,6 +26,21 @@ index_params = {
 }
 search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
 
+# should only be run at app start up to setup the vector db
+def setup():
+    connections.connect(
+            host=env.MILVUS_DATABASE_URL,
+            port=env.MILVUS_DATABASE_PORT
+        )
+    collection = Collection("user_embeddings", schema)
+    collection.flush()
+    if not collection.has_index(index_name="main_idx"):
+        collection.create_index(
+            index_name="main_idx",
+            field_name='embeddings',
+            index_params=index_params
+        )
+
 class VectorDB:
     def __init__(self):
         connections.connect(
@@ -33,16 +48,6 @@ class VectorDB:
             port=env.MILVUS_DATABASE_PORT
         )
         self.collection = Collection("user_embeddings", schema)
-        
-    # should only be run at app start up to setup the vector db
-    def setup(self):
-        self.collection.flush()
-        if not self.collection.has_index(index_name="main_idx"):
-            self.collection.create_index(
-                index_name="main_idx",
-                field_name='embeddings',
-                index_params=index_params
-            )
 
     def insert(self, vector: List[float], user_id: uuid.UUID) -> None:
         self.collection.insert([[user_id.hex], [vector]])

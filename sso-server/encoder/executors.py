@@ -10,3 +10,5 @@ def load_model():
     encoder = tf.keras.models.load_model(env.MODEL_PATH)
 
 executor = ProcessPoolExecutor(max_workers=1, initializer=load_model)
+
+load_model()

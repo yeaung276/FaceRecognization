@@ -37,3 +37,6 @@ class ProfileRepository:
     def get_by_username(self, username: str) -> List[ProfileResponse]:
         profiles = self.db.query(Profile).filter(Profile.user_name==username).all()
         return [ProfileResponse.from_orm(p) for p in profiles]
+    
+    def exist(self, username: str) -> bool:
+        return self.db.query(Profile).filter(Profile.user_name==username).first() is not None

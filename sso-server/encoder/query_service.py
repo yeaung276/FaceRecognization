@@ -5,7 +5,7 @@ import tensorflow as tf
 import numpy as np
 
 from repository.milvus import VectorDB, Vector
-from encoder.executors import encoder
+from encoder.executors import encoder, load_model
 
 L2_THRESHOLD = 5
 class VectorQuery:
@@ -14,6 +14,8 @@ class VectorQuery:
         
     @staticmethod
     def predict(vector: Vector) -> np.ndarray:
+        if encoder is None:
+            load_model()
         tensor = tf.constant(vector.vector)
         tensors = tf.reshape(tensor, (1, len(vector.vector)))
         logging.info(f'Converted enbedding to tensor with shape={tensor.shape}')

@@ -2,7 +2,7 @@ import uuid
 from redis import Redis
 import env
 
-CODE_TTL_SECOND = 10
+CODE_TTL_SECOND = 60
 
 def get_redis():
     return Redis(env.REDIS_DATABASE_URL, env.REDIS_DATABASE_PORT)

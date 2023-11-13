@@ -5,12 +5,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from api_schema.requests import ProfileRequest, AuthRequest
 from api_schema.response import ClaimResponse
 from repository.profile import ProfileRepository
-from repository.exception import UserNameError
+from repository.milvus import setup as vector_setup
 from redis_codegen.codegen import get_redis, CodeGen
 from jwt.token import create_token
 from encoder.background_service import BackgroundService
 from encoder.query_service import VectorQuery
-from encoder.executors import load_model
+import env
 
 ssoApp = FastAPI()
 
@@ -25,7 +25,8 @@ ssoApp.add_middleware(
 @ssoApp.on_event('startup')
 async def setup():
     ssoApp.state.redis = get_redis()
-    load_model()
+    if env.MODE == 'setup':
+        vector_setup()
     
     
 @ssoApp.on_event('shutdown')
@@ -44,7 +45,7 @@ def get_token(code: str, profile_repo: ProfileRepository = Depends(ProfileReposi
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Code expired or not exist")
     profile = profile_repo.get(profile_id)
     token, expiry = create_token(profile.dict())
-    return ClaimResponse(token=token, expiry=expiry, type='barer')
+    return ClaimResponse(token=token, expiry=expiry, type='barrer')
 
 @ssoApp.post('/authenticate')
 def authenticate(request: AuthRequest, 
@@ -57,7 +58,7 @@ def authenticate(request: AuthRequest,
     if profile is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     code = CodeGen.create_one_time_code(ssoApp.state.redis, profile.id)
-    return RedirectResponse(url=f'{request.redirect_uri}?code={code}')
+    return RedirectResponse(url=f'{request.redirect_uri}?code={code}', status_code=status.HTTP_302_FOUND)
         
         
 
@@ -65,9 +66,9 @@ def authenticate(request: AuthRequest,
 async def register(request: ProfileRequest, 
                    background: BackgroundService = Depends(BackgroundService), 
                    profile_repo: ProfileRepository = Depends(ProfileRepository)):
-    try:
+    if profile_repo.exist(request.user_name):
+        profile = profile_repo.get_by_username(username=request.user_name)[0]
+    else:
         profile = profile_repo.insert(request)
-        background.start_add_vector_task(request.face_embedding, profile.id)
-        return profile
-    except UserNameError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="username already taken")
+    background.start_add_vector_task(request.face_embedding, profile.id)
+    return profile

@@ -95,8 +95,9 @@ services:
       REDIS_PORT: 6379
       JWT_SECRET_KEY: 'JWTSECRETKEY'
       MODEL_PATH: '/models/v1/'
-      MILVUS_DATABASE_URL: 'milvus-standalone'
+      MILVUS_DATABASE_URL: 'milvus'
       MILVUS_DATABASE_PORT: 19530
+      MODE: 'prod'
     ports:
       - "8080:8080"
     volumes:
