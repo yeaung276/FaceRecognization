@@ -4,3 +4,4 @@ mocks/pipeline_root
 mocks/pipeline_metadata
 temp
 .pytest_cache
+volumes

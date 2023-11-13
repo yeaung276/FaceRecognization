@@ -18,7 +18,7 @@ class BackgroundService:
         self.background_task = background_task
         
     @staticmethod
-    def predict(vector: Vector):
+    def predict(vector: Vector) -> tf.Tensor:
         tensor = tf.constant(vector.vector)
         tensors = tf.reshape(tensor, (1, len(vector.vector)))
         logger.info(f'Converted enbedding to tensor with shape={tensor.shape}')
@@ -30,6 +30,7 @@ class BackgroundService:
             logger.info(f'Encoding process started. id={user_id}')
             encoding = await loop.run_in_executor(executor, self.predict, vector)
             logger.info(f'Saving encoding to the database. id={user_id}')
+            self.vector_db.insert(encoding)
             
         except Exception as e:
             logger.info(f'Error saving encoding. id={user_id}, error={e}')
