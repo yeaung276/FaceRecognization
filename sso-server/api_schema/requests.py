@@ -12,7 +12,6 @@ class ProfileRequest(BaseModel):
     face_embedding: Vector
     
 class AuthRequest(BaseModel):
-    user_name: str
     face_embedding: Vector
     redirect_uri: str
     

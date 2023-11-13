@@ -4,12 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api_schema.requests import ProfileRequest, AuthRequest
 from api_schema.response import ClaimResponse
-from repository.db import get_db
 from repository.profile import ProfileRepository
 from repository.exception import UserNameError
 from redis_codegen.codegen import get_redis, CodeGen
 from jwt.token import create_token
 from encoder.background_service import BackgroundService
+from encoder.query_service import VectorQuery
+from encoder.executors import load_model
 
 ssoApp = FastAPI()
 
@@ -24,6 +25,8 @@ ssoApp.add_middleware(
 @ssoApp.on_event('startup')
 async def setup():
     ssoApp.state.redis = get_redis()
+    load_model()
+    
     
 @ssoApp.on_event('shutdown')
 async def shutdown():
@@ -44,14 +47,16 @@ def get_token(code: str, profile_repo: ProfileRepository = Depends(ProfileReposi
     return ClaimResponse(token=token, expiry=expiry, type='barer')
 
 @ssoApp.post('/authenticate')
-async def authenticate(request: AuthRequest, 
-                       profile_repo: ProfileRepository=Depends(ProfileRepository)):
-    profiles = profile_repo.get_by_username(username=request.user_name)
-    if len(profiles) == 0:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Credentail errors")
-    # here goes authenticcation by neural net
-    # end
-    code = CodeGen.create_one_time_code(ssoApp.state.redis, profiles[0].id)
+def authenticate(request: AuthRequest, 
+                       profile_repo: ProfileRepository=Depends(ProfileRepository),
+                       query_service: VectorQuery=Depends(VectorQuery)):
+    user_id = query_service.authenticate(request.face_embedding)
+    if user_id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    profile = profile_repo.get(user_id)
+    if profile is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    code = CodeGen.create_one_time_code(ssoApp.state.redis, profile.id)
     return RedirectResponse(url=f'{request.redirect_uri}?code={code}')
         
         
