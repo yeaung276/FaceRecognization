@@ -10,7 +10,7 @@ The SSO-Web component is responsible for the web frontend of the Single Sign-On 
 4. Run `yarn optimizeTF` to create optimized TFJS bundles.
 5. Run `yarn build` to build the web.
 
-## Features
+## Summary
 
 - **JavaScript Bundling:** Utilizes Vite for efficient bundling of JavaScript files and HTML pages.
 - **Face Detection and Encoding:** Uses OpenCV.js for face detection. Detected faces are then cropped, encoded using MobileNet, and sent to the SSO-Server component.
